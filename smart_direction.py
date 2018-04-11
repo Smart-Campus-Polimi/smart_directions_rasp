@@ -69,6 +69,13 @@ class mqttThread(threading.Thread):
 		client.loop_forever()
 
 #### PING Thread ####
+class pingThread(threading.Thread):
+	def __init__(self, user):
+		threading.Thread.__init__(self)
+		self.user = user
+
+	def run(self):
+		print "new thread with device ", user["mac_address"]
 
 
 #### END PING Thread ####
