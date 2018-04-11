@@ -27,8 +27,9 @@ def on_message(client, userdata, message):
 	#print "message qos=",message.qos
 	#print "message retain flag=",message.retain
 
-
-class myThread(threading.Thread):
+ 
+#### MQTT Thread ####
+class mqttThread(threading.Thread):
 	def __init__(self,name):
 		threading.Thread.__init__(self)
 		self.name = name
@@ -46,17 +47,18 @@ class myThread(threading.Thread):
 		client.subscribe(topic_name)
 
 		client.loop_forever()
-	##########
+
+#### END MQTT Thread ####
 
 
 
-
+#### MAIN ####
 if __name__ == "__main__":
 	print "SM4RT_D1R3CT10Nz v0.1"
 
 	users_list = {}
 	users_number = len(users_list)
-	thread_mqtt = myThread("mqtt")
+	thread_mqtt = mqttThread("mqtt")
 
 	thread_mqtt.start()
 
@@ -64,3 +66,5 @@ if __name__ == "__main__":
 		if(len(users_list) != users_number):
 			pp.pprint(users_list)
 			users_number = len(users_list)
+
+#### END MAIN ####
