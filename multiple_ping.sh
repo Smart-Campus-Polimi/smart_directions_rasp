@@ -15,14 +15,14 @@ for mac in ${ARRAY_MAC[*]}
 do
 	if [[ $mac == $last ]]
 	then 
-		until l2ping $mac; do 
+		until nohup l2ping $mac; do 
 			sleep 1
 		done
 		break
 	fi
 
 
-	until l2ping $mac; do 
+	until nohup l2ping $mac; do 
 		sleep 1
 	done &
 
