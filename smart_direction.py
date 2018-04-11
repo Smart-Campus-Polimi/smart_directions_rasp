@@ -5,6 +5,8 @@ import sys
 import subprocess
 import threading
 import json
+import bluetoothHandler
+import subprocess
 import pprint as pp
 import paho.mqtt.client as mqtt
 from time import sleep
@@ -12,7 +14,7 @@ from time import sleep
 
 
 
-broker_address = "192.168.1.74" 
+broker_address = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
 
 def on_message(client, userdata, message):
@@ -75,17 +77,22 @@ class pingThread(threading.Thread):
 		self.user = user
 
 	def run(self):
-		print "new thread with device ", user["mac_address"]
+		print "new thread for the device with mac address", self.user["mac_address"]
+		bt = bluetoothHandler.bluetoothHandler()
+		bt.start(self.user["mac_address"])
+		print bt.rssi()
+
+
 
 
 #### END PING Thread ####
 
 #new users actions
 def new_user_found(user):
-	print "new user"
-	pp.pprint(user)
-	#ping_device = pingThread(user)
-	#ping_device.start()
+	#print "new user"
+	#pp.pprint(user)
+	ping_device = pingThread(user)
+	ping_device.start()
 
 #### MAIN ####
 if __name__ == "__main__":
