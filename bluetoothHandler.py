@@ -69,17 +69,12 @@ def is_ping(line):
 
 def parse_rssi(rssi):
 	if (len(rssi)) < 19:
-		print rssi, "less"
 		return None
 	elif len(rssi) == 20:
-		print rssi, "20"
 		return rssi[-1:]
 	elif len(rssi) == 21:
-		print rssi, "21"
 		return rssi[-2:]
 	elif len(rssi) == 22:
-		print rssi, 22
 		return rssi[-3:]
 
-	print rssi, "none"
 	return None
