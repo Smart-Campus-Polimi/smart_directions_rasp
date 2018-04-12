@@ -28,7 +28,7 @@ class bluetoothHandler:
 		#if is_ping(line):
 		try:
 			#ask rssi
-			rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address])#, bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address], stderr=subprocess.STDOUT)
 			return parse_rssi(rssi)
 		except subprocess.CalledProcessError as e:
 			#print e.output

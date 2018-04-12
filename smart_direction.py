@@ -15,8 +15,8 @@ from time import sleep
 
 
 
-broker_address = "192.168.1.74"
-#broker_address = "10.0.2.15" 
+#broker_address = "192.168.1.74"
+broker_address = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
 
 def on_message(client, userdata, message):
@@ -76,9 +76,22 @@ class pingThread(threading.Thread):
 				count += 1
 				if count == 20:
 					rssi_avg = float(float(sum_rssi)/count)
+					if rssi_avg>=-0.2 and rssi_avg <= 0.5:
+						print "very near"
+					elif rssi_avg <= -20:
+						print "distant"
+					elif rssi_avg > -20.0 and rssi_avg <=-5.0:
+						print "quite distant"
+					elif rssi_avg > -5.0 and rssi_avg <-0.2:
+						print "near"
+					elif rssi_avg > 0.5:
+						print "appiccicato"
 					print rssi_avg
 					sum_rssi = 0 
 					count = 0
+
+			else:
+				print "out of range"
 
 
 
