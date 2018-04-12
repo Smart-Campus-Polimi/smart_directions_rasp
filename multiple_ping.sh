@@ -7,7 +7,7 @@ if [ ${#ARRAY_MAC[*]} -eq 0 ]; then
 else
     pos=$(( ${#ARRAY_MAC[*]} - 1 ))
 	last=${ARRAY_MAC[$pos]}
-	echo "pinging ${ARRAY_MAC[*]} ..."
+	echo "Ping ${ARRAY_MAC[*]} ..."
 fi
 
 

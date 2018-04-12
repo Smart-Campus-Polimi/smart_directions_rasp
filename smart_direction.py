@@ -80,8 +80,10 @@ class pingThread(threading.Thread):
 		print "new thread for the device with mac address", self.user["mac_address"]
 		bt = bluetoothHandler.bluetoothHandler()
 		bt.start(self.user["mac_address"])
-		print bt.rssi()
-
+		while True:
+			rssi_raw = bt.rssi()
+			if rssi_raw != None:
+				print rssi_raw
 
 
 

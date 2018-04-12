@@ -5,7 +5,7 @@ remove="RSSI return value: "
 sum_rssi=0
 x=0
 
-echo "start retrieve rssi of device $MAC"
+echo "start pinging $MAC"
 
 while true; do
 	((x++))
