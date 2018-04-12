@@ -14,7 +14,8 @@ from time import sleep
 
 
 
-broker_address = "192.168.1.74" 
+broker_address = "192.168.1.74"
+#broker_address = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
 
 def on_message(client, userdata, message):
@@ -83,7 +84,7 @@ class pingThread(threading.Thread):
 		while True:
 			rssi_raw = bt.rssi()
 			if rssi_raw != None:
-				print rssi_raw
+				print int(rssi_raw)
 
 
 

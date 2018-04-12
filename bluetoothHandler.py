@@ -27,11 +27,11 @@ class bluetoothHandler:
 		#exit process if device is in range
 		#if is_ping(line):
 		try:
-				#ask rssi
-			rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address])
+			#ask rssi
+			rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address])#, bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			return parse_rssi(rssi)
 		except subprocess.CalledProcessError as e:
-			print e.output
+			#print e.output
 			return None
 		#else:
 		#	return None
@@ -43,29 +43,23 @@ def is_ping(line):
 	if not line:
 		return False
 	elif "Ping" in line:
-		print line, "ping"
 		return False
 	elif "Host is down" in line:
-		print line, "host"
 		return False
 	elif "Send failed" in line:
-		print line, "snd"
 		return False
 	elif "Recv failed" in line:
-		print line, "rcv"
 		return False
 	elif "no response" in line:
-		print line, "no resp"
 		return False
 	elif "l2ping" in line:
-		print line, "l2"
 		return False
 	elif "Oops" in line:
-		print line, "oops"
 		return False
 
 	return True
 
+#parse the rssi string
 def parse_rssi(rssi):
 	if (len(rssi)) < 19:
 		return None
