@@ -14,7 +14,7 @@ from time import sleep
 
 
 
-broker_address = "10.0.2.15" 
+broker_address = "192.168.1.74" 
 topic_name = "topic/rasp4/directions"
 
 def on_message(client, userdata, message):
