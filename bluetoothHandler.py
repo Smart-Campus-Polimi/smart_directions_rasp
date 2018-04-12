@@ -22,20 +22,19 @@ class bluetoothHandler:
 			self.start()
 
 		#retrieve the ping line from stdout
-		line = self.ping.stdout.readline()
+		#line = self.ping.stdout.readline()
 
 		#exit process if device is in range
-		if is_ping(line):
-			try:
+		#if is_ping(line):
+		try:
 				#ask rssi
-				rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address])
-				print line
-				return parse_rssi(rssi)
-			except subprocess.CalledProcessError as e:
-				print e.output
-				return None
-		else:
+			rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address])
+			return parse_rssi(rssi)
+		except subprocess.CalledProcessError as e:
+			print e.output
 			return None
+		#else:
+		#	return None
 
 
 
