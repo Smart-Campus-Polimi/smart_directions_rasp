@@ -67,6 +67,7 @@ class pingThread(threading.Thread):
 		
 		sum_rssi = 0
 		count = 0
+		count_out = 0
 		
 		while True:
 			rssi_raw = bt.rssi()
@@ -77,21 +78,24 @@ class pingThread(threading.Thread):
 				if count == 20:
 					rssi_avg = float(float(sum_rssi)/count)
 					if rssi_avg>=-0.2 and rssi_avg <= 0.5:
-						print "very near"
+						print "very near",rssi_avg
 					elif rssi_avg <= -20:
-						print "distant"
+						print "distant",rssi_avg
 					elif rssi_avg > -20.0 and rssi_avg <=-5.0:
-						print "quite distant"
+						print "quite distant",rssi_avg
 					elif rssi_avg > -5.0 and rssi_avg <-0.2:
-						print "near"
+						print "near",rssi_avg
 					elif rssi_avg > 0.5:
-						print "appiccicato"
-					print rssi_avg
+						print "appiccicato",rssi_avg
+					
 					sum_rssi = 0 
 					count = 0
 
 			else:
-				print "out of range"
+				count_out += 1
+				if count_out==50:
+					print "out of range"
+					count_out = 0
 
 
 
