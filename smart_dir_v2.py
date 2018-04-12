@@ -11,8 +11,8 @@ import mqttHandler
 import pprint as pp
 from time import sleep
 
-#broker_address = "192.168.1.74"
-broker_address = "10.0.2.15" 
+broker_address = "192.168.1.74"
+#broker_address = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
 
 
@@ -91,7 +91,8 @@ class pingThread(threading.Thread):
 def signal_handler(signal, frame):
 	print "Exit Program..."
 	thread_mqtt.stop()
-	ping_device.stop()
+	for th in thread_user:
+		th.stop()
 	running = 0
 	sys.exit(0)
 
@@ -103,6 +104,7 @@ def new_user_found(user):
 	ping_device = pingThread(user)
 	ping_device.start()
 
+	return ping_device
 
 #### MAIN ####
 if __name__ == "__main__":
@@ -115,6 +117,7 @@ if __name__ == "__main__":
 	thread_mqtt.start()
 	users_list = []
 	users_number = len(users_list)
+	thread_user = []
 	
 	while running:
 		#new user appear in dictionary
@@ -123,14 +126,15 @@ if __name__ == "__main__":
 			if len(users_list) == 0:
 				#retrieve the first key in dictionary
 				users_list.append(active_users.keys()[0])
-				new_user_found(active_users[active_users.keys()[0]])
+				thread_user.append(new_user_found(active_users[active_users.keys()[0]]))
 
 			else:
 				#check which users is the new one
 				for usr in active_users.keys():
 					if usr not in users_list:
 						users_list.append(usr)
-						new_user_found(active_users[usr])
+						thread_user.append(new_user_found(active_users[usr]))
+
 						
 			
 			users_number = len(active_users)
