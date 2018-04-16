@@ -25,7 +25,7 @@ class bluetoothHandler:
 		line = self.ping.stdout.readline()
 
 		#exit process if device is in range
-		if is_ping(line):
+		if is_ping(line, self.mac_address):
 			rssi = parse_ping_rssi(line)
 			return rssi
 		else:
@@ -43,8 +43,10 @@ class bluetoothHandler:
 
 
 #check if ping is working == device is in range or mac address is correct
-def is_ping(line):
+def is_ping(line, mac_addr):
 	if not line:
+		return False
+	elif not mac_addr in line:
 		return False
 	elif "Ping" in line:
 		return False
@@ -68,4 +70,8 @@ def parse_ping_rssi(line):
 	offset = line.find('RSSI') + 6
 	line = line.replace('\n', '')
 	rssi = line[offset:]
-	print line, rssi
+	ping = line[:(offset-13)]
+	ping = ping[(ping.find('time')+4+1):]
+	
+	#print line, rssi, ping
+	return rssi

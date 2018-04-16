@@ -74,7 +74,7 @@ class MqttThread(threading.Thread):
 	def stop(self):
 		self.client.disconnect()
 
-######
+######	
 
 class PingThread(threading.Thread):
 	def __init__(self, user):
@@ -88,7 +88,11 @@ class PingThread(threading.Thread):
 		bt.start(self.user)
 		self.is_running = True
 		while self.is_running:
-			bt.rssi()
+			rssi = bt.rssi()
+			if rssi is not None:
+				print rssi
+			else: 
+				print "out of range"
 
 	def stop(self):
 		self.is_running = False

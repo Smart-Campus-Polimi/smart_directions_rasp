@@ -9,11 +9,9 @@ function trapint {
     exit 0
 }
 
-echo "ping $mac_address"
-
 while : 
 	do
-		sudo l2ping $mac_address
+		sudo l2ping -s1 $mac_address
 done
 
 echo "exit ping process"
