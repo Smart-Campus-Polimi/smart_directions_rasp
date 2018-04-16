@@ -10,8 +10,8 @@ class bluetoothHandler:
 	def start(self, mac_address):
 		self.mac_address = mac_address
 
-		print "Thread", self," starts ping ", self.mac_address
-		self.ping = subprocess.Popen(['unbuffer','./multiple_ping.sh', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		print "Object", self," starts ping ", self.mac_address
+		self.ping = subprocess.Popen(['unbuffer','l2ping', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 		return self.ping
 
@@ -22,17 +22,19 @@ class bluetoothHandler:
 			self.start()
 
 		#retrieve the ping line from stdout
-		#line = self.ping.stdout.readline()
+		line = self.ping.stdout.readline()
+		if line:
+			print line
 
 		#exit process if device is in range
 		#if is_ping(line):
-		try:
+		#try:
 			#ask rssi
-			rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address], stderr=subprocess.STDOUT)
-			return parse_rssi(rssi)
-		except subprocess.CalledProcessError as e:
+		#	rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address], stderr=subprocess.STDOUT)
+		#	return parse_rssi(rssi)
+		#except subprocess.CalledProcessError as e:
 			#print e.output
-			return None
+		#	return None
 		#else:
 		#	return None
 
