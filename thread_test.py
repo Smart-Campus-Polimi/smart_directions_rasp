@@ -45,7 +45,7 @@ class Receiver:
 
 			#add message to queue
 			if not q.full():
-				q.put(msg_mqtt)
+				q.put(msg_mqtt[0])
 			else:
 				print "Queue is full!"
 
@@ -83,10 +83,15 @@ class PingThread(threading.Thread):
 		self.user = user
 
 	def run(self):
-		print "Hi, i'm ", self.user, " thread"
+		mac_target = self.user['mac_address']
+		place_id_target = self.user['place_id']
+		timestamp_target = self.user['timestamp']
+
+		print "Hi, i'm ", mac_target, " mac address"
 		print "starting ping ... "
+
 		bt = bluetoothHandler.bluetoothHandler()
-		bt.start(self.user)
+		bt.start(mac_target)
 		self.is_running = True
 
 		sum_rssi = 0 
@@ -191,7 +196,7 @@ if __name__ == "__main__":
 	while True:
 		if not q.empty():
 			item = q.get()
-			print "new message is arrived... mac address is: ", item
+			print "new message is arrived... ID is: ", item['id']
 			user = PingThread(item)
 			t_sniffer.append(user)
 			user.start()
