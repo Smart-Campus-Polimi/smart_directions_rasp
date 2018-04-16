@@ -13,6 +13,7 @@ import pprint as pp
 import paho.mqtt.client as mqtt
 
 BUF_SIZE = 10
+AVG_RATE = 20
 q = Queue.Queue(BUF_SIZE)
 
 broker_address = "10.0.2.15" 
@@ -90,37 +91,38 @@ class PingThread(threading.Thread):
 
 		sum_rssi = 0 
 		count = 0
-		avg_rssi = 0
+		rssi_avg = 0
 
 		while self.is_running:
 			rssi = bt.rssi()
 			
 			if rssi is not None:
-				try:
-					rssi = int(rssi)
-					sum_rssi += float(rssi)
-					count += 1
-					if count == 20:
-						avg_rssi = float(sum_rssi)/count
-						count = 0
-						sum_rssi = 0
-						print avg_rssi
-						
-				except ValueError:
-					print "Out of Range" 
+				if rssi == "OOR":
+					print "Out of Range"
+				else:
+					try:
+						rssi = float(rssi)
+					except ValueError:
+						print "Conversion error!"
+
+					rssi_avg, count, sum_rssi = average_rssi(rssi, count, sum_rssi)
+					if rssi_avg is not None:
+						print check_proximity(rssi_avg), "---", rssi_avg
+					
+					 
 
 			
 
 	def stop(self):
 		self.is_running = False
 
+
 def signal_handler(signal, frame):
-	print "esci"
+	print "Exit!"
 	user.stop()
 	t_mqtt.stop()
 	subprocess.Popen(['killall', 'l2ping'])
 	sys.exit(0)
-
 
 def args_parser():
 	try:
@@ -144,6 +146,29 @@ def args_parser():
 			#usage()
 			print "Exit.. TODO how to use"
 			sys.exit(2)
+
+def average_rssi(rssi, count, sum_rssi):
+		sum_rssi += rssi
+		count += 1
+		if count == AVG_RATE:
+			rssi_avg = float(sum_rssi)/count
+			count = 0
+			sum_rssi = 0
+			return rssi_avg, count, sum_rssi
+
+		return None, count, sum_rssi
+
+def check_proximity(rssi):
+	if rssi > 0.5:
+		return "very very near"
+	if rssi > -1.0 and rssi <=0.5:
+		return "very near"
+	if rssi > -10 and rssi <=-1.0:
+		return "near"
+	if rssi > -20 and rssi <=-10:
+		return "visible"
+	if rssi <= -20:
+		return "in range"
 
 #### MAIN ####
 if __name__ == "__main__":
