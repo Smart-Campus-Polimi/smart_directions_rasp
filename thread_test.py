@@ -82,17 +82,29 @@ class PingThread(threading.Thread):
 		self.user = user
 
 	def run(self):
-		print "ciao, sono il thread di ", self.user
-		print "parto a pingare... "
+		print "Hi, i'm ", self.user, " thread"
+		print "starting ping ... "
 		bt = bluetoothHandler.bluetoothHandler()
 		bt.start(self.user)
 		self.is_running = True
+
+		sum_rssi = 0 
+		count = 0
+		avg_rssi = 0
+		oor_count = 1
 		while self.is_running:
 			rssi = bt.rssi()
 			if rssi is not None:
-				print rssi
+				sum_rssi += float(rssi)
+				count += 1
+				if count == 20:
+					avg_rssi = float(sum_rssi)/count
+					count = 0
+					sum_rssi = 0
+					print avg_rssi
 			else: 
-				print "out of range"
+				if (oor_count % 10) == 0:
+					print "out of range"
 
 	def stop(self):
 		self.is_running = False
