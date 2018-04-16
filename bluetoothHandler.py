@@ -24,45 +24,50 @@ class bluetoothHandler:
 		#retrieve the ping line from stdout
 		line = self.ping.stdout.readline()
 
-		#exit process if device is in range
-		if is_ping(line, self.mac_address):
-			rssi = parse_ping_rssi(line)
-			return rssi
-		else:
+		if not line:
 			return None
-		#try:
-			#ask rssi
-		#	rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address], stderr=subprocess.STDOUT)
-		#	return parse_rssi(rssi)
-		#except subprocess.CalledProcessError as e:
-			#print e.output
-		#	return None
-		#else:
-		#	return None
 
+		#check if is in range
+		if is_range(line, self.mac_address):
+			if is_ping(line, self.mac_address):
+				rssi = parse_ping_rssi(line)
+				return rssi
 
+			#else l2ping is establishing a new connection
+			else:
+				return None
+		else:
+			#host out of range
+			return "OOR"
+	
 
-#check if ping is working == device is in range or mac address is correct
+#check the ping reset
 def is_ping(line, mac_addr):
-	if not line:
+	if "Ping" in line:
 		return False
-	elif not mac_addr in line:
+	elif "Connection reset" in line:
 		return False
-	elif "Ping" in line:
+	elif "Read RSSI failed" in line:
 		return False
-	elif "Host is down" in line:
+	elif "loss" in line:
 		return False
 	elif "Send failed" in line:
 		return False
-	elif "Recv failed" in line:
+	elif "Recv Failed" in line:
+		return False
+
+	return True
+
+#check if device is out of range
+def is_range(line, mac_addr):
+	if "Host is down" in line:
 		return False
 	elif "no response" in line:
 		return False
 	elif "l2ping" in line:
 		return False
-	elif "Oops" in line:
-		return False
-
+	
+	
 	return True
 
 #parse the ping string
