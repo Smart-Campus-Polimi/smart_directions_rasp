@@ -11,7 +11,7 @@ class bluetoothHandler:
 		self.mac_address = mac_address
 
 		print "Object", self," starts ping ", self.mac_address
-		self.ping = subprocess.Popen(['unbuffer','l2ping', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		self.ping = subprocess.Popen(['unbuffer','./infinite_ping.sh', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 		return self.ping
 
@@ -23,11 +23,13 @@ class bluetoothHandler:
 
 		#retrieve the ping line from stdout
 		line = self.ping.stdout.readline()
-		if line:
-			print line
 
 		#exit process if device is in range
-		#if is_ping(line):
+		if is_ping(line):
+			rssi = parse_ping_rssi(line)
+			return rssi
+		else:
+			return None
 		#try:
 			#ask rssi
 		#	rssi = subprocess.check_output(['hcitool', 'rssi', self.mac_address], stderr=subprocess.STDOUT)
@@ -61,15 +63,9 @@ def is_ping(line):
 
 	return True
 
-#parse the rssi string
-def parse_rssi(rssi):
-	if (len(rssi)) < 19:
-		return None
-	elif len(rssi) == 20:
-		return rssi[-1:]
-	elif len(rssi) == 21:
-		return rssi[-2:]
-	elif len(rssi) == 22:
-		return rssi[-3:]
-
-	return None
+#parse the ping string
+def parse_ping_rssi(line):
+	offset = line.find('RSSI') + 6
+	line = line.replace('\n', '')
+	rssi = line[offset:]
+	print line, rssi
