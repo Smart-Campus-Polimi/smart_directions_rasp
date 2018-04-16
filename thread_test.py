@@ -98,16 +98,17 @@ class PingThread(threading.Thread):
 			if rssi is not None:
 				try:
 					rssi = int(rssi)
-					print rssi
+					sum_rssi += float(rssi)
+					count += 1
+					if count == 20:
+						avg_rssi = float(sum_rssi)/count
+						count = 0
+						sum_rssi = 0
+						print avg_rssi
+						
 				except ValueError:
 					print "Out of Range" 
-				#	sum_rssi += float(rssi)
-					#count += 1
-				#	if count == 20:
-				#		avg_rssi = float(sum_rssi)/count
-				#		count = 0
-				#		sum_rssi = 0
-				#		print avg_rssi
+
 			
 
 	def stop(self):

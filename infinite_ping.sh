@@ -11,7 +11,7 @@ function trapint {
 
 while : 
 	do
-		sudo l2ping -s1  $mac_address
+		sudo l2ping -s 1 -f $mac_address
 done
 
 echo "exit ping process"
