@@ -9,6 +9,8 @@ import getopt
 import Queue
 import subprocess
 import bluetoothHandler
+import xml_parser
+import xml.etree.ElementTree as ET
 import pprint as pp
 import paho.mqtt.client as mqtt
 
@@ -86,6 +88,12 @@ class PingThread(threading.Thread):
 		mac_target = self.user['mac_address']
 		place_id_target = self.user['place_id']
 		timestamp_target = self.user['timestamp']
+
+
+		tree = ET.parse('map.xml')
+		root = tree.getroot()
+
+		print "direction: ", xml_parser.find_direction(root, place_id_target, "A")
 
 		print "Hi, i'm ", mac_target, " mac address"
 		print "starting ping ... "
