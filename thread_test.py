@@ -21,6 +21,7 @@ q = Queue.Queue(BUF_SIZE)
 broker_address = "10.0.2.15" 
 broker_address_cluster = "192.168.1.74"
 topic_name = "topic/rasp4/directions"
+rasp_id = "A"
 
 global client
 class Receiver:
@@ -89,11 +90,12 @@ class PingThread(threading.Thread):
 		place_id_target = self.user['place_id']
 		timestamp_target = self.user['timestamp']
 
-
 		tree = ET.parse('map.xml')
 		root = tree.getroot()
 
-		print "direction: ", xml_parser.find_direction(root, place_id_target, "A")
+		direction = xml_parser.find_direction(root, place_id_target, rasp_id)
+		
+		print "direction: ", direction
 
 		print "Hi, i'm ", mac_target, " mac address"
 		print "starting ping ... "

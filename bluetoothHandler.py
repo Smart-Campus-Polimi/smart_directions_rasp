@@ -10,7 +10,6 @@ class bluetoothHandler:
 	def start(self, mac_address):
 		self.mac_address = mac_address
 
-		print "Object", self," starts ping ", self.mac_address
 		self.ping = subprocess.Popen(['unbuffer','./infinite_ping.sh', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 		return self.ping
