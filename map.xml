@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map>
+	 <place placeid="3403">
+	 	<name>Ufficio Redondi</name>
+	 	<location>3rd floor</location>
+	 	<directions>
+	 		<rasp id="A">straight</rasp>
+	 		<rasp id="B">sx</rasp>
+	 		<rasp id="C">dx</rasp>
+	 		<rasp id="D">sx</rasp>
+	 	</directions>
+	 </place>
+
+	  <place placeid="3695">
+	 	<name>Ufficio Cesana</name>
+	 	<location>3rd floor</location>
+	 	<directions>
+	 		<rasp id="A">straight</rasp>
+	 		<rasp id="B">sx</rasp>
+	 		<rasp id="C">dx</rasp>
+	 		<rasp id="D">sx</rasp>
+	 	</directions>
+	 </place>
+
+
+	  <place placeid="3449">
+	 	<name>Ufficio Capone</name>
+	 	<location>3rd floor</location>
+	 	<directions>
+	 		<rasp id="A">straight</rasp>
+	 		<rasp id="B">sx</rasp>
+	 		<rasp id="C">dx</rasp>
+	 		<rasp id="D">straight</rasp>
+	 	</directions>
+	 </place>
+</map>
