@@ -4,10 +4,10 @@
 	 	<name>Ufficio Redondi</name>
 	 	<location>3rd floor</location>
 	 	<directions>
-	 		<rasp id="A">straight</rasp>
-	 		<rasp id="B">sx</rasp>
-	 		<rasp id="C">dx</rasp>
-	 		<rasp id="D">sx</rasp>
+	 		<rasp id="A" final="False">straight</rasp>
+	 		<rasp id="B" final="False">sx</rasp>
+	 		<rasp id="C" final="False">dx</rasp>
+	 		<rasp id="D" final="True">sx</rasp>
 	 	</directions>
 	 </place>
 
@@ -15,10 +15,10 @@
 	 	<name>Ufficio Cesana</name>
 	 	<location>3rd floor</location>
 	 	<directions>
-	 		<rasp id="A">straight</rasp>
-	 		<rasp id="B">sx</rasp>
-	 		<rasp id="C">dx</rasp>
-	 		<rasp id="D">sx</rasp>
+	 		<rasp id="A" final="False">straight</rasp>
+	 		<rasp id="B" final="False">sx</rasp>
+	 		<rasp id="C" final="False">dx</rasp>
+	 		<rasp id="D" final="True">sx</rasp>
 	 	</directions>
 	 </place>
 
@@ -27,10 +27,10 @@
 	 	<name>Ufficio Capone</name>
 	 	<location>3rd floor</location>
 	 	<directions>
-	 		<rasp id="A">straight</rasp>
-	 		<rasp id="B">sx</rasp>
-	 		<rasp id="C">dx</rasp>
-	 		<rasp id="D">straight</rasp>
+	 		<rasp id="A" final="False">straight</rasp>
+	 		<rasp id="B" final="False">sx</rasp>
+	 		<rasp id="C" final="False">dx</rasp>
+	 		<rasp id="D" final="True">straight</rasp>
 	 	</directions>
 	 </place>
 </map>

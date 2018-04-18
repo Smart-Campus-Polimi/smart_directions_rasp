@@ -21,7 +21,8 @@ q = Queue.Queue(BUF_SIZE)
 broker_address = "10.0.2.15" 
 broker_address_cluster = "192.168.1.74"
 topic_name = "topic/rasp4/directions"
-rasp_id = "A"
+pwd = subprocess.check_output(['pwd']).rstrip() + "/"
+rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
 
 global client
 class Receiver:
@@ -93,7 +94,7 @@ class PingThread(threading.Thread):
 		tree = ET.parse('map.xml')
 		root = tree.getroot()
 
-		direction = xml_parser.find_direction(root, place_id_target, rasp_id)
+		direction, final = xml_parser.find_direction(root, place_id_target, rasp_id)
 		
 		print "direction: ", direction
 
@@ -107,6 +108,8 @@ class PingThread(threading.Thread):
 		sum_rssi = 0 
 		count = 0
 		rssi_avg = 0
+		arrived = False
+		oor_count = 0
 
 		while self.is_running:
 			rssi = bt.rssi()
@@ -114,15 +117,24 @@ class PingThread(threading.Thread):
 			if rssi is not None:
 				if rssi == "OOR":
 					print "Out of Range"
+					oor_count += 1
+					if arrived and oor_count>2:
+						print "users is arrived to destination"
+						if final:
+							print "stop all the ping"
 				else:
 					try:
 						rssi = float(rssi)
 					except ValueError:
 						print "Conversion error!"
+						break	
 
 					rssi_avg, count, sum_rssi = average_rssi(rssi, count, sum_rssi)
 					if rssi_avg is not None:
-						print check_proximity(rssi_avg), "---", rssi_avg
+						position = check_proximity(rssi_avg)
+						if (position == "very near") or (position == "very near"):
+							arrived = True
+						print position, "---", rssi_avg
 					
 					 
 
@@ -188,7 +200,7 @@ def check_proximity(rssi):
 #### MAIN ####
 if __name__ == "__main__":
 	signal.signal(signal.SIGINT, signal_handler)
-	print "SM4RT_D1R3CT10Nz v0.3 thread"
+	print "SM4RT_D1R3CT10Nz v0.3 thread", rasp_id
 	args_parser()
 
 	if rasp:
