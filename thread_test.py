@@ -117,11 +117,12 @@ class PingThread(threading.Thread):
 			if rssi is not None:
 				if rssi == "OOR":
 					print "Out of Range"
-					if arrived and oor_count>2:
+					if arrived:
 						oor_count += 1
-						print "users pass the destination"
-						if final:
-							print "stop all the ping"
+						if oor_count > 3:
+							print "users pass the destination"
+							if final:
+								print "stop all the ping"
 				else:
 					try:
 						rssi = float(rssi)
