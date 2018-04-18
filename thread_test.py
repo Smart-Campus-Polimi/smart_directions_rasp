@@ -140,7 +140,7 @@ class PingThread(threading.Thread):
 		while self.is_running:
 			logging.debug("inside while loop")
 			rssi = bt.rssi()
-			logging.debug("reading rssi %s", rssi)
+			logging.debug("reading rssi: %s", rssi)
 
 
 			if rssi is not None:
@@ -163,13 +163,13 @@ class PingThread(threading.Thread):
 				else:
 					try:
 						rssi = float(rssi)
+						rssi_avg, count, sum_rssi = average_rssi(rssi, count, sum_rssi)
 						#logging.debug("puntual rssi: %s", rssi)
 					except ValueError as e:
 						logging.error("Rssi concersion error %s", e)
 						print "Conversion error!"
-						break	
+						continue
 
-					rssi_avg, count, sum_rssi = average_rssi(rssi, count, sum_rssi)
 					if rssi_avg is not None:
 						logging.debug("average rssi: %s", rssi)
 						position = check_proximity(rssi_avg)
