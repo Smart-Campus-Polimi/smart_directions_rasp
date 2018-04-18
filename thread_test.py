@@ -10,6 +10,7 @@ import Queue
 import subprocess
 import bluetoothHandler
 import xml_parser
+import logging
 import xml.etree.ElementTree as ET
 import pprint as pp
 import paho.mqtt.client as mqtt
@@ -18,11 +19,18 @@ BUF_SIZE = 10
 AVG_RATE = 20
 q = Queue.Queue(BUF_SIZE)
 
+
+pwd = subprocess.check_output(['pwd']).rstrip() + "/"
+rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
+logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.debug, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logging.debug("Start smart directions on rasp "+rasp_id)
+logging.debug("directory: "+ pwd)
+
 broker_address = "10.0.2.15" 
 broker_address_cluster = "192.168.1.74"
 topic_name = "topic/rasp4/directions"
-pwd = subprocess.check_output(['pwd']).rstrip() + "/"
-rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
+
 
 global client
 class Receiver:
@@ -146,33 +154,52 @@ class PingThread(threading.Thread):
 
 
 def signal_handler(signal, frame):
+	logging.debug("Signal Handler arrived")
 	print "Exit!"
-	user.stop()
+
+	#close all the thread in thread list
+	for user in t_sniffer:
+		logging.debug("closing thread "+user)
+		user.stop()
+
+	logging.debug("stopping all ping thread")
 	t_mqtt.stop()
-	subprocess.Popen(['killall', 'l2ping'])
+	logging.debug("Stopping mqtt thread")
+	killall_ping = subprocess.Popen(['killall', 'l2ping'])
+	logging.debug("Closing l2ping process "+killall_ping)
+
+	logging.debug("Closing the program")
 	sys.exit(0)
 
 def args_parser():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'h:r', ['help', 'rasp='])
+		logging.debug("Input params" opts)
 	except getopt.GetoptError as err:
 		print str(err)
+		logging.warning("params error"+opts)
 		#usage()
 		print "Error, TODO how to use"
+		logging.warning("exit program")
 		sys.exit(2)
 
 	global rasp
 	rasp = 0
 	for opt, arg in opts:
 		if opt in ('-h', '--help'):
+			logging.debug("help")
 			print "TODO how to use"
 			#usage()
+			logging.debug("exit program")
 			sys.exit(2)
 		elif opt in ('-r', '--rasp'):
 			rasp = 1
+			logging.debug("rasp mode enabled "+rasp)
 		else:
 			#usage()
+			logging.warning("some error in params "+params)
 			print "Exit.. TODO how to use"
+			logging.debug("exit program")
 			sys.exit(2)
 
 def average_rssi(rssi, count, sum_rssi):
@@ -202,15 +229,21 @@ def check_proximity(rssi):
 if __name__ == "__main__":
 	signal.signal(signal.SIGINT, signal_handler)
 	print "SM4RT_D1R3CT10Nz v0.3 thread", rasp_id
+	logging.debug("Starting main...")
+
 	args_parser()
 
 	if rasp:
 		broker_address = broker_address_cluster
+		logging.debug("Set broker address in rasp mode: "+ broker_address)
 
+	logging.debug("broker_address is "+broker_address)
 
 	t_mqtt = MqttThread(broker_address)
 	t_mqtt.setDaemon(True)
-
+	logging.debug("Setting up the mqtt thread")
+	
+	global t_sniffer
 	t_sniffer = []
 
 	t_mqtt.start()
@@ -218,8 +251,13 @@ if __name__ == "__main__":
 
 	while True:
 		if not q.empty():
+			logging.debug("A new message is arrived. ID" +item['id'])
+			logging.info(item)
+
 			item = q.get()
 			print "new message is arrived... ID is: ", item['id']
 			user = PingThread(item)
 			t_sniffer.append(user)
+
+			logging("Creating a new thread")
 			user.start()
