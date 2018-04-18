@@ -180,8 +180,9 @@ class PingThread(threading.Thread):
 							logging.info("Printing out direction")
 						logging.debug("position is %s", position)
 						if position < 2:
-							arrived = True
-							logging.info("The user is arrived to destination")
+							if not arrived:
+								arrived = True
+								logging.info("The user is arrived to destination")
 						print "position:", position, "---", rssi_avg
 					
 					 
