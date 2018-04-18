@@ -97,7 +97,7 @@ class PingThread(threading.Thread):
 		direction, final = xml_parser.find_direction(root, place_id_target, rasp_id)
 		
 		print "direction: ", direction
-
+		print "final?", final
 		print "Hi, i'm ", mac_target, " mac address"
 		print "starting ping ... "
 
@@ -117,9 +117,9 @@ class PingThread(threading.Thread):
 			if rssi is not None:
 				if rssi == "OOR":
 					print "Out of Range"
-					oor_count += 1
 					if arrived and oor_count>2:
-						print "users is arrived to destination"
+						oor_count += 1
+						print "users pass the destination"
 						if final:
 							print "stop all the ping"
 				else:

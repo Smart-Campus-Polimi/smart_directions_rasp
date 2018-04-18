@@ -13,8 +13,11 @@ def find_direction(root, pl_id, rasp_id):
 		if(int(place.attrib['placeid']) == pl_id):
 			for direction in place.findall('directions'):
 				for rasp in direction.findall('rasp'):
-					print rasp.attrib['final']
+					if rasp.attrib['final'] == "True":
+						final = True
+					elif rasp.attrib['final'] == "False":
+						final = False
 					if (rasp.attrib['id'] == rasp_id):
-						return rasp.text, rasp.attrib['final']
+						return rasp.text, final
 		else:
 			return None, None
