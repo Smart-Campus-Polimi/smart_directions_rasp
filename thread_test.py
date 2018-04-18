@@ -22,7 +22,7 @@ q = Queue.Queue(BUF_SIZE)
 
 pwd = subprocess.check_output(['pwd']).rstrip() + "/"
 rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
-logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.debug, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename= 'raspa.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
@@ -36,35 +36,46 @@ global client
 class Receiver:
 	def on_connect(self, client, userdata, flags, rc):
 			print "Connected with result code "+str(rc)
+			logging.debug("Connected with result code "+str(rc))
 			# Subscribing in on_connect() means that if we lose the connection and
 			# reconnect then subscribeptions will be renewed.
 			client.subscribe(topic_name)
+			logging.debug("Subscribing to %s", topic_name)
 
 	def on_message(self, client, userdata, msg):
 			#print msg.topic+" "+str(msg.payload)
+			logging.debug("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
 			msg_mqtt_raw = "[" + str(msg.payload.decode("utf-8")) + "]"
 			
 			if (msg.payload=="disconnect"):
+				logging.debug("disconnection through message")
 				client.disconnect()
 				return 
 
 
 			try:
 				msg_mqtt = json.loads(msg_mqtt_raw)
+				logging.debug("json concerted. Content: %s", msg_mqtt)
 			except ValueError, e:
+				logging.error("Malformed json %s", e)
 				msg_mqtt = msg_mqtt_raw[:-1]
 				msg_mqtt = msg_mqtt[1:]
 
 			#add message to queue
 			if not q.full():
 				q.put(msg_mqtt[0])
+				logging.debug("putting msg %s in queue", msg_mqtt[0])
 			else:
+				logging.warning("Queue is full %s", q)
 				print "Queue is full!"
 
 
 	def on_disconnect(self, client, userdata, rc):
 		if rc != 0:
+			logging.error("Unexpected disconnection %d", rc)
 			print("Unexpected disconnection.")
+		else:
+			logging.debug("disconnection ok")
 
 class MqttThread(threading.Thread):
 	def __init__(self, host):
@@ -74,18 +85,22 @@ class MqttThread(threading.Thread):
 
 	def run(self):
 		print "creating client --- host: ", self.host
+		logging.debug("Mqtt thread runs")
 		receiver = Receiver()
 		self.client.loop_start()
+		logging.debug("Mqtt starts loop")
 		self.client.on_connect = receiver.on_connect
 		self.client.on_message = receiver.on_message
 
 		self.client.connect_async(self.host, 1883)
+		logging.debug("opening mqtt connection")
 		#loop until disconnect
 		#client.loop_forever()
 			
 	
 	def stop(self):
 		self.client.disconnect()
+		logging.warning("disconnect mqtt")
 
 ######	
 
@@ -158,15 +173,23 @@ def signal_handler(signal, frame):
 	print "Exit!"
 
 	#close all the thread in thread list
+	logging.debug("the thread are: %s", t_sniffer)
 	for user in t_sniffer:
-		logging.debug("closing thread "+user)
+		logging.debug("closing thread ")
+		logging.debug(user)
 		user.stop()
 
 	logging.debug("stopping all ping thread")
 	t_mqtt.stop()
 	logging.debug("Stopping mqtt thread")
-	killall_ping = subprocess.Popen(['killall', 'l2ping'])
-	logging.debug("Closing l2ping process "+killall_ping)
+	try:
+		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
+		logging.debug("Closing l2ping process %s", killall_ping)
+	except subprocess.CalledProcessError as e:
+		logging.warning(e)
+		logging.warning("No l2ping process")
+
+	
 
 	logging.debug("Closing the program")
 	sys.exit(0)
@@ -174,10 +197,10 @@ def signal_handler(signal, frame):
 def args_parser():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'h:r', ['help', 'rasp='])
-		logging.debug("Input params" opts)
+		logging.debug("Input params %s", opts)
 	except getopt.GetoptError as err:
 		print str(err)
-		logging.warning("params error"+opts)
+		#logging.warning("params error"+opts)
 		#usage()
 		print "Error, TODO how to use"
 		logging.warning("exit program")
@@ -194,10 +217,10 @@ def args_parser():
 			sys.exit(2)
 		elif opt in ('-r', '--rasp'):
 			rasp = 1
-			logging.debug("rasp mode enabled "+rasp)
+			logging.debug("rasp mode enabled %d", rasp)
 		else:
 			#usage()
-			logging.warning("some error in params "+params)
+			logging.warning("some error in params ",params)
 			print "Exit.. TODO how to use"
 			logging.debug("exit program")
 			sys.exit(2)
@@ -227,6 +250,7 @@ def check_proximity(rssi):
 
 #### MAIN ####
 if __name__ == "__main__":
+	logging.debug("_____________________________")
 	signal.signal(signal.SIGINT, signal_handler)
 	print "SM4RT_D1R3CT10Nz v0.3 thread", rasp_id
 	logging.debug("Starting main...")
@@ -237,7 +261,7 @@ if __name__ == "__main__":
 		broker_address = broker_address_cluster
 		logging.debug("Set broker address in rasp mode: "+ broker_address)
 
-	logging.debug("broker_address is "+broker_address)
+	logging.debug("the broker_address is "+broker_address)
 
 	t_mqtt = MqttThread(broker_address)
 	t_mqtt.setDaemon(True)
@@ -251,13 +275,12 @@ if __name__ == "__main__":
 
 	while True:
 		if not q.empty():
-			logging.debug("A new message is arrived. ID" +item['id'])
-			logging.info(item)
-
 			item = q.get()
-			print "new message is arrived... ID is: ", item['id']
+			logging.debug("A new message is arrived. ID %s" ,item['id'])
+			logging.info(item)
+			print "new message is arrived... ID is:", item['id']
 			user = PingThread(item)
 			t_sniffer.append(user)
 
-			logging("Creating a new thread")
+			logging.debug("Creating a new thread")
 			user.start()
