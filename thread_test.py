@@ -22,7 +22,7 @@ q = Queue.Queue(BUF_SIZE)
 
 pwd = subprocess.check_output(['pwd']).rstrip() + "/"
 rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
-logging.basicConfig(filename= 'raspa.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
@@ -138,7 +138,6 @@ class PingThread(threading.Thread):
 		logging.debug("setting up params. is_running %s, arrived %s", self.is_running, arrived)
 		logging.info("staring while loop")
 		while self.is_running:
-			logging.debug("inside while loop")
 			rssi = bt.rssi()
 			logging.debug("reading rssi: %s", rssi)
 
@@ -171,20 +170,30 @@ class PingThread(threading.Thread):
 						continue
 
 					if rssi_avg is not None:
-						logging.debug("average rssi: %s", rssi)
+						logging.debug("average rssi: %s", rssi_avg)
 						position = check_proximity(rssi_avg)
+						logging.debug("position is %s", position)
+						print "position:", position, "---", rssi_avg
+
+						#sistemare un pochino
 						if position < 4:
 							if not print_dir:
 								print "ARROW", direction
 								print_dir = True
-							logging.info("Printing out direction")
-						logging.debug("position is %s", position)
+								logging.info("Printing out direction: ARROW %s", direction)
+						
 						if position < 2:
 							if not arrived:
 								arrived = True
 								logging.info("The user is arrived to destination")
-						print "position:", position, "---", rssi_avg
 					
+						if position > 3:
+							if print_dir:
+								print_dir = False
+								logging.info("Turn off the projector")
+								logging.debug("Projector is off because position is %s and avg_rssi is %s", position, rssi_avg)
+								print "turn off the projector"
+
 					 
 
 			
