@@ -13,7 +13,7 @@ class bluetoothHandler:
 
 		logging.basicConfig(filename= 'bluetooth_.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-		self.ping = subprocess.Popen(['unbuffer','./infinite_ping.sh', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		self.ping = subprocess.Popen(['unbuffer','./ifinite_ping.sh', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		logging.info("open infinite ping %s", self.ping)
 		return self.ping
 

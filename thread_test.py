@@ -35,8 +35,8 @@ topic_name = "topic/rasp4/directions"
 global client
 class Receiver:
 	def on_connect(self, client, userdata, flags, rc):
-			print "Connected with result code "+str(rc)
-			logging.debug("Connected with result code "+str(rc))
+			#print "Connected with result code "+str(rc)
+			logging.debug("MQTT: connected with result code "+str(rc))
 			# Subscribing in on_connect() means that if we lose the connection and
 			# reconnect then subscribeptions will be renewed.
 			client.subscribe(topic_name)
