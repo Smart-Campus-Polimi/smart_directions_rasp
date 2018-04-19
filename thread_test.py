@@ -274,23 +274,23 @@ def average_rssi(rssi, count, sum_rssi):
 def check_proximity(rssi):
 	if rssi > 0.5:
 		position = "very very near"
-		logging.debug(position)
+		logging.info(position)
 		return 0
 	elif rssi > -1.0 and rssi <=0.5:
 		position = "very near"
-		logging.debug(position)
+		logging.info(position)
 		return 1
 	elif rssi > -10 and rssi <=-1.0:
 		position = "near"
-		logging.debug(position)
+		logging.info(position)
 		return 2
 	elif rssi > -20 and rssi <=-10:
 		position = "visible"
-		logging.debug(position)
+		logging.info(position)
 		return 3
 	elif rssi <= -20:
 		position = "in range"
-		logging.debug(position)
+		logging.info(position)
 		return 4
 	else:
 		return 9
