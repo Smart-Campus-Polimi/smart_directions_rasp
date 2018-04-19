@@ -49,22 +49,25 @@ class bluetoothHandler:
 #check the ping reset
 def is_ping(line, mac_addr):
 	if "Ping" in line:
-		logging.warning("ping in line  %s", line)
+		logging.debug("ping in line  %s", line)
 		return False
 	elif "Connection reset" in line:
-		logging.warning("connection reset  %s", line)
+		logging.debug("connection reset  %s", line)
 		return False
 	elif "Read RSSI failed" in line:
-		logging.warning("RSSI failed  %s", line)
+		logging.debug("RSSI failed  %s", line)
 		return False
 	elif "loss" in line:
-		logging.warning("something loss  %s", line)
+		logging.debug("something loss  %s", line)
 		return False
 	elif "Send failed" in line:
-		logging.warning("Send failed  %s", line)
+		logging.debug("Send failed  %s", line)
 		return False
 	elif "Recv Failed" in line:
-		logging.warning("Recv failed  %s", line)
+		logging.debug("Recv failed  %s", line)
+		return False
+	elif "Connection timed" in line:
+		logging.debug("connection timed out  %s", line)
 		return False
 
 	return True
@@ -72,13 +75,13 @@ def is_ping(line, mac_addr):
 #check if device is out of range
 def is_range(line, mac_addr):
 	if "Host is down" in line:
-		logging.warning("host is down %s", line)
+		logging.debug("host is down %s", line)
 		return False
 	elif "no response" in line:
-		logging.warning("no response %s", line)
+		logging.debug("no response %s", line)
 		return False
 	elif "l2ping" in line:
-		logging.warning("l2ping %s", line)
+		logging.debug("l2ping %s", line)
 		return False
 	
 	
