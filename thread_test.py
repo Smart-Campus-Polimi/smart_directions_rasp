@@ -19,10 +19,9 @@ BUF_SIZE = 10
 AVG_RATE = 20
 q = Queue.Queue(BUF_SIZE)
 
-
 pwd = subprocess.check_output(['pwd']).rstrip() + "/"
 rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
-logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
@@ -229,7 +228,7 @@ def signal_handler(signal, frame):
 
 def args_parser():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'h:r', ['help', 'rasp='])
+		opts, args = getopt.getopt(sys.argv[1:], 'hrv', ['help', 'rasp=', 'verbose='])
 		logging.debug("Input params %s", opts)
 	except getopt.GetoptError as err:
 		print str(err)
@@ -251,6 +250,9 @@ def args_parser():
 		elif opt in ('-r', '--rasp'):
 			rasp = 1
 			logging.debug("rasp mode enabled %d", rasp)
+		elif opt in ('-v', '--verbose'):
+			logging.getLogger().setLevel(logging.DEBUG)
+			logging.debug("vervose mode enabled %s", opt)
 		else:
 			#usage()
 			logging.warning("some error in params ",params)
