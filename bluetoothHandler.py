@@ -25,23 +25,23 @@ class bluetoothHandler:
 		line = self.ping.stdout.readline()
 
 		if not line:
-			return None
+			return None, None
 
 		#check if is in range
 		if is_range(line, self.mac_address):
 			if is_ping(line, self.mac_address):
-				rssi = parse_ping_rssi(line)
+				rssi, ping = parse_ping_rssi(line)
 				logging.debug("rssi is %s", rssi)
-				return rssi
+				return rssi, ping
 
 			#else l2ping is establishing a new connection
 			else:
 				logging.debug("rssi is %s", line)
-				return None
+				return None, None
 		else:
 			#host out of range
 			logging.info("device is out of range %s", line)
-			return "OOR"
+			return "OOR", None
 	
 
 #check the ping reset
@@ -94,4 +94,4 @@ def parse_ping_rssi(line):
 	ping = ping[(ping.find('time')+4+1):]
 	
 	#print line, rssi, ping
-	return rssi
+	return rssi, ping
