@@ -5,14 +5,13 @@ import threading
 import bluetoothHandler
 import subprocess
 import xml_parser
-
+import thread_test
+import csv
 
 AVG_RATE = 20
+filename_csv = 'test.csv'
 
-
-pwd = subprocess.check_output(['pwd']).rstrip() + "/"
-rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
-
+f = open(filename_csv, 'w')
 
 def average_rssi(rssi, count, sum_rssi):
 		sum_rssi += rssi
@@ -62,9 +61,9 @@ def user_out_of_range(self):
 			if self.oor_count > 1:
 				self.engaged = False
 				logging.debug("Out of range count: %s", self.oor_count)
-				turn_off_projector()
+				turn_off_projector(self)
 				
-def turn_off_projector():
+def turn_off_projector(self):
 	self.print_dir = False
 	self.queue.put("turn off the projector")
 
@@ -72,7 +71,7 @@ def turn_off_projector():
 	logging.info("User passes the destination")
 	print "users pass the rasp, turn off proj"
 
-def turn_on_projector(direct):
+def turn_on_projector(self, direct):
 	print "ARROW", direct
 	self.print_dir = True
 	self.queue.put("turn on projector")
@@ -86,21 +85,30 @@ def user_in_range(self):
 
 	if self.position < 4:
 		if not self.print_dir:
-			turn_on_projector(self.direction)
+			turn_on_projector(self, self.direction)
 						
 		if self.position < 2:
 			if not self.engaged:
 				self.engaged = True
 				logging.info("The user is engaged by rasp")
 				if self.final:
-					logging.info("The user is in the final step")
-					#todo
-					logging.info("sending stop messages to the other rasp")
+					user_arrived(self)
+					
 		
 	elif self.position > 3:
 		if self.print_dir:
-			turn_off_projector()
+			turn_off_projector(self)
 			logging.debug("Projector is off because position is %s and avg_rssi is %s", self.position, self.rssi_avg)
+
+
+
+def user_arrived(self):
+	logging.info("The user is in the final step")
+	logging.info("sending stop messages to the other rasp")
+	self.queue.put("user arrived "+ self.mac_target)
+
+def create_csv(file, rssi, ping):
+	file.write("\n"+str(rssi)+","+str(ping))	
 
 
 class PingThread(threading.Thread):
@@ -109,6 +117,8 @@ class PingThread(threading.Thread):
 		self.user = user
 		self.root = root
 		self.queue = queue
+		self.f = open(str(self)[19]+filename_csv, 'w')
+		self.f.write("\"rssi\",\"ping\"")
 
 	def run(self):
 		self.mac_target = self.user['mac_address']
@@ -117,7 +127,7 @@ class PingThread(threading.Thread):
 		logging.debug("Thread %s is running", self)
 		logging.debug("Thread input params. mac: %s, place_id: %s, ts: %s", self.mac_target, self.place_id_target, self.timestamp_target)
 
-		self.direction, self.final = xml_parser.find_direction(self.root, self.place_id_target, rasp_id)
+		self.direction, self.final = xml_parser.find_direction(self.root, self.place_id_target, thread_test.rasp_id)
 		logging.debug("parsing file. direcition: %s, is_final: %s", self.direction, self.final)
 		logging.info("starting bluetooth handler")
 		print "starting ping ... "
@@ -131,18 +141,19 @@ class PingThread(threading.Thread):
 
 		logging.info("staring while loop")
 		while self.is_running:
-			rssi = bt.rssi()
-			logging.debug("reading rssi: %s", rssi)
+			self.rssi, self.ping = bt.rssi()
+			logging.debug("reading rssi: %s", self.rssi)
 
-			if rssi is not None:
-				if rssi == "OOR":
-					logging.debug("out of range rssi: %s", rssi)
+			if self.rssi is not None:
+				if self.rssi == "OOR":
+					logging.debug("out of range rssi: %s", self.rssi)
 					user_out_of_range(self)
 				else:
 					try:
-						rssi = float(rssi)
-						self.rssi_avg, self.count, self.sum_rssi = average_rssi(rssi, self.count, self.sum_rssi)
+						self.rssi = float(self.rssi)
+						self.rssi_avg, self.count, self.sum_rssi = average_rssi(self.rssi, self.count, self.sum_rssi)
 						self.oor_count = 0
+						create_csv(self.f, self.rssi, self.ping)
 						#logging.debug("puntual rssi: %s", rssi)
 					except ValueError as e:
 						logging.error("Rssi concersion error %s", e)
@@ -155,5 +166,6 @@ class PingThread(threading.Thread):
 
 	def stop(self):
 		self.is_running = False
+		f.close()
 
 	

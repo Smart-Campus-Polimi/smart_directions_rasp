@@ -109,7 +109,10 @@ if __name__ == "__main__":
 
 	logging.info("the broker_address is "+broker_address)
 
-	t_mqtt = MqttHandler.MqttThread(broker_address, topic_name)
+	mqtt_sub_q = Queue.Queue()
+	mqtt_pub_q = Queue.Queue()
+
+	t_mqtt = MqttHandler.MqttThread(mqtt_sub_q, mqtt_pub_q, broker_address)
 	t_mqtt.setDaemon(True)
 	logging.info("Setting up the mqtt thread")
 	
@@ -118,21 +121,27 @@ if __name__ == "__main__":
 
 	t_mqtt.start()
 	
-	projector_queue = Queue.Queue()
+	sniffer_queue = Queue.Queue()
 
 	while True:
-		if not MqttHandler.q.empty():
-			item = MqttHandler.q.get()
+		if not mqtt_sub_q.empty():
+			item = mqtt_sub_q.get()
 			logging.info("A new message is arrived. ID %s" ,item['id'])
 			logging.info(item)
 			print "new message is arrived... ID is:", item['id']
-			user = PingHandler.PingThread(item, map_root, projector_queue)
+			user = PingHandler.PingThread(item, map_root, sniffer_queue)
 			t_sniffer.append(user)
 
 			logging.debug("Creating a new thread")
 			user.start()
 
-		if not projector_queue.empty():
-			proj_msg = projector_queue.get()
-			logging.info("Reading proj queue msg: %s", proj_msg)
-			print "Reading proj queue msg: ", proj_msg
+		if not sniffer_queue.empty():
+			sniffer_msg = sniffer_queue.get()
+			logging.info("Reading proj queue msg: %s", sniffer_msg)
+			print "Reading proj queue msg: ", sniffer_msg
+			if "user arrived" in sniffer_msg:
+				print "receiving stop msg ", sniffer_msg[-17:]
+				logging.info("Stopping user %s", sniffer_msg[-17:])
+				mqtt_pub_q.put(sniffer_msg[-17:])
+
+
