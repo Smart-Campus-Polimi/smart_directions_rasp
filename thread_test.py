@@ -9,7 +9,9 @@ import getopt
 import Queue
 import subprocess
 import logging
+import xml.etree.ElementTree as ET
 import pprint as pp
+#my imports
 import MqttHandler
 import PingHandler
 
@@ -100,6 +102,11 @@ if __name__ == "__main__":
 		broker_address = broker_address_cluster
 		logging.debug("Set broker address in rasp mode: "+ broker_address)
 
+	#opening map
+	logging.info("Opening map")
+	tree = ET.parse('map.xml')
+	map_root = tree.getroot()
+
 	logging.info("the broker_address is "+broker_address)
 
 	t_mqtt = MqttHandler.MqttThread(broker_address, topic_name)
@@ -118,7 +125,7 @@ if __name__ == "__main__":
 			logging.info("A new message is arrived. ID %s" ,item['id'])
 			logging.info(item)
 			print "new message is arrived... ID is:", item['id']
-			user = PingHandler.PingThread(item)
+			user = PingHandler.PingThread(item, map_root)
 			t_sniffer.append(user)
 
 			logging.debug("Creating a new thread")
