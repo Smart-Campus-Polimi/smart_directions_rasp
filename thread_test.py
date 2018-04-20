@@ -13,11 +13,10 @@ import xml_parser
 import logging
 import xml.etree.ElementTree as ET
 import pprint as pp
-import paho.mqtt.client as mqtt
+import MqttHandler
 
-BUF_SIZE = 10
 AVG_RATE = 20
-q = Queue.Queue(BUF_SIZE)
+
 
 pwd = subprocess.check_output(['pwd']).rstrip() + "/"
 rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
@@ -30,78 +29,6 @@ broker_address = "10.0.2.15"
 broker_address_cluster = "192.168.1.74"
 topic_name = "topic/rasp4/directions"
 
-
-global client
-class Receiver:
-	def on_connect(self, client, userdata, flags, rc):
-			#print "Connected with result code "+str(rc)
-			logging.debug("MQTT: connected with result code "+str(rc))
-			# Subscribing in on_connect() means that if we lose the connection and
-			# reconnect then subscribeptions will be renewed.
-			client.subscribe(topic_name)
-			logging.debug("Subscribing to %s", topic_name)
-
-	def on_message(self, client, userdata, msg):
-			#print msg.topic+" "+str(msg.payload)
-			logging.debug("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
-			msg_mqtt_raw = "[" + str(msg.payload.decode("utf-8")) + "]"
-			
-			if (msg.payload=="disconnect"):
-				logging.debug("disconnection through message")
-				client.disconnect()
-				return 
-
-
-			try:
-				msg_mqtt = json.loads(msg_mqtt_raw)
-				logging.debug("json concerted. Content: %s", msg_mqtt)
-			except ValueError, e:
-				logging.error("Malformed json %s", e)
-				msg_mqtt = msg_mqtt_raw[:-1]
-				msg_mqtt = msg_mqtt[1:]
-
-			#add message to queue
-			if not q.full():
-				q.put(msg_mqtt[0])
-				logging.debug("putting msg %s in queue", msg_mqtt[0])
-			else:
-				logging.warning("Queue is full %s", q)
-				print "Queue is full!"
-
-
-	def on_disconnect(self, client, userdata, rc):
-		if rc != 0:
-			logging.error("Unexpected disconnection %d", rc)
-			print("Unexpected disconnection.")
-		else:
-			logging.debug("disconnection ok")
-
-class MqttThread(threading.Thread):
-	def __init__(self, host):
-		threading.Thread.__init__(self)
-		self.client = mqtt.Client()
-		self.host = host
-
-	def run(self):
-		print "creating client --- host: ", self.host
-		logging.info("Mqtt thread runs")
-		receiver = Receiver()
-		self.client.loop_start()
-		logging.info("Mqtt starts loop")
-		self.client.on_connect = receiver.on_connect
-		self.client.on_message = receiver.on_message
-
-		self.client.connect_async(self.host, 1883)
-		logging.info("opening mqtt connection")
-		#loop until disconnect
-		#client.loop_forever()
-			
-	
-	def stop(self):
-		self.client.disconnect()
-		logging.info("disconnect mqtt")
-
-######	
 
 class PingThread(threading.Thread):
 	def __init__(self, user):
@@ -311,7 +238,7 @@ if __name__ == "__main__":
 
 	logging.info("the broker_address is "+broker_address)
 
-	t_mqtt = MqttThread(broker_address)
+	t_mqtt = MqttHandler.MqttThread(broker_address, topic_name)
 	t_mqtt.setDaemon(True)
 	logging.info("Setting up the mqtt thread")
 	
@@ -322,8 +249,8 @@ if __name__ == "__main__":
 	
 
 	while True:
-		if not q.empty():
-			item = q.get()
+		if not MqttHandler.q.empty():
+			item = MqttHandler.q.get()
 			logging.info("A new message is arrived. ID %s" ,item['id'])
 			logging.info(item)
 			print "new message is arrived... ID is:", item['id']
