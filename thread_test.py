@@ -118,6 +118,7 @@ if __name__ == "__main__":
 
 	t_mqtt.start()
 	
+	projector_queue = Queue.Queue()
 
 	while True:
 		if not MqttHandler.q.empty():
@@ -125,8 +126,13 @@ if __name__ == "__main__":
 			logging.info("A new message is arrived. ID %s" ,item['id'])
 			logging.info(item)
 			print "new message is arrived... ID is:", item['id']
-			user = PingHandler.PingThread(item, map_root)
+			user = PingHandler.PingThread(item, map_root, projector_queue)
 			t_sniffer.append(user)
 
 			logging.debug("Creating a new thread")
 			user.start()
+
+		if not projector_queue.empty():
+			proj_msg = projector_queue.get()
+			logging.info("Reading proj queue msg: %s", proj_msg)
+			print "Reading proj queue msg: ", proj_msg

@@ -56,21 +56,27 @@ def initialize_values():
 def user_out_of_range(self):
 		print "Out of Range"
 		logging.info("Out of range")
-		if self.engaged:
-			logging.debug("Engaged? %s", self.engaged)
+		if self.print_dir:
+			logging.debug("print dir? %s", self.print_dir)
 			self.oor_count += 1
 			if self.oor_count > 1:
-				self.print_dir = False
-				logging.info("Turn off the projector")
-				#turn_off()
-				logging.info("User passes the destination")
+				self.engaged = False
 				logging.debug("Out of range count: %s", self.oor_count)
-				print "users pass the rasp, turn off proj"
-				#if self.final:
-				#	logging.info("Stopping all the ping")
-				#	print "stop all the ping"
-					#stop_all_process
+				turn_off_projector()
+				
+def turn_off_projector():
+	self.print_dir = False
+	self.queue.put("turn off the projector")
 
+	logging.info("Turn off the projector")		
+	logging.info("User passes the destination")
+	print "users pass the rasp, turn off proj"
+
+def turn_on_projector(direct):
+	print "ARROW", direct
+	self.print_dir = True
+	self.queue.put("turn on projector")
+	logging.info("Printing out direction: ARROW %s", direct)
 
 def user_in_range(self):
 	self.position = check_proximity(self.rssi_avg)
@@ -80,27 +86,29 @@ def user_in_range(self):
 
 	if self.position < 4:
 		if not self.print_dir:
-			print "ARROW", self.direction
-			self.print_dir = True
-			logging.info("Printing out direction: ARROW %s", self.direction)
+			turn_on_projector(self.direction)
 						
 		if self.position < 2:
 			if not self.engaged:
 				self.engaged = True
 				logging.info("The user is engaged by rasp")
+				if self.final:
+					logging.info("The user is in the final step")
+					#todo
+					logging.info("sending stop messages to the other rasp")
 		
 	elif self.position > 3:
 		if self.print_dir:
-			self.print_dir = False
-			logging.info("Turn off the projector")
+			turn_off_projector()
 			logging.debug("Projector is off because position is %s and avg_rssi is %s", self.position, self.rssi_avg)
-			print "turn off the projector"
+
 
 class PingThread(threading.Thread):
-	def __init__(self, user, root):
+	def __init__(self, user, root, queue):
 		threading.Thread.__init__(self)
 		self.user = user
 		self.root = root
+		self.queue = queue
 
 	def run(self):
 		self.mac_target = self.user['mac_address']
