@@ -7,9 +7,13 @@ import subprocess
 import xml_parser
 import thread_test
 import csv
+from collections import namedtuple
+
 
 AVG_RATE = 20
 filename_csv = 'test.csv'
+
+ProjMsg = namedtuple('ProjMsg', ['mac_address', 'direction', 'proj_status', 'final_pos', 'timestamp'])
 
 f = open(filename_csv, 'w')
 
@@ -64,18 +68,27 @@ def user_out_of_range(self):
 				turn_off_projector(self)
 				
 def turn_off_projector(self):
+	#logging.info("User passes the destination, turn OFF the projector")	
 	self.print_dir = False
-	self.queue.put("turn off the projector")
-
-	logging.info("Turn off the projector")		
-	logging.info("User passes the destination")
+	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp="10:12:12")
+	logging.debug("Projector msg: %s", p_msg)
+	#self.queue.put("turn off the projector")
+	self.queue.put(p_msg)
+	logging.info("Putting in queue the proj_msg")
 	print "users pass the rasp, turn off proj"
 
 def turn_on_projector(self, direct):
+	#logging.info("User arrives to destination, turn ON the projector")
+	logging.debug("Direction: ARROW %s", direct)
 	print "ARROW", direct
+
 	self.print_dir = True
-	self.queue.put("turn on projector")
-	logging.info("Printing out direction: ARROW %s", direct)
+	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp="10:12:12")
+	logging.debug("Projector msg: %s", p_msg)
+	self.queue.put(p_msg)
+	logging.info("Putting in queue the proj_msg")
+
+	#self.queue.put("turn on projector")
 
 def user_in_range(self):
 	self.position = check_proximity(self.rssi_avg)
@@ -91,8 +104,9 @@ def user_in_range(self):
 			if not self.engaged:
 				self.engaged = True
 				logging.info("The user is engaged by rasp")
-				if self.final:
-					user_arrived(self)
+				#if self.final:
+				#when an user is engaged by the sniffer, every sniffer sends a msg. then if the sniffer itself is the final one the main handle this
+				user_arrived(self)
 					
 		
 	elif self.position > 3:
@@ -103,27 +117,29 @@ def user_in_range(self):
 
 
 def user_arrived(self):
-	logging.info("The user is in the final step")
-	logging.info("sending stop messages to the other rasp")
-	self.queue.put("user arrived "+ self.mac_target)
+	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=self.final, timestamp="10:12:12")
+	self.queue.put(p_msg)
+
+	logging.info("Putting in queue the proj_msg with final purpose")
+	logging.debug("Projector msg: %s", p_msg)
 
 def create_csv(file, rssi, ping):
 	file.write("\n"+str(rssi)+","+str(ping))	
 
 
 class PingThread(threading.Thread):
-	def __init__(self, user, root, queue):
+	def __init__(self, user, root, queue, stop_queue):
 		threading.Thread.__init__(self)
 		self.user = user
 		self.root = root
 		self.queue = queue
+		self.stop_queue = stop_queue
 		self.f = open(str(self)[19]+filename_csv, 'w')
 		self.f.write("\"rssi\",\"ping\"")
 
 	def run(self):
-		self.mac_target = self.user['mac_address']
-		self.place_id_target = self.user['place_id']
-		self.timestamp_target = self.user['timestamp']
+		self.mac_target, self.place_id_target, __, self.timestamp_target = self.user
+		
 		logging.debug("Thread %s is running", self)
 		logging.debug("Thread input params. mac: %s, place_id: %s, ts: %s", self.mac_target, self.place_id_target, self.timestamp_target)
 
@@ -141,6 +157,19 @@ class PingThread(threading.Thread):
 
 		logging.info("staring while loop")
 		while self.is_running:
+
+			if not self.stop_queue.empty():
+				self.msg = self.stop_queue.get()
+				print "msg in ping handler", self.msg
+				if type(self.msg).__name__ == "StopMsg":
+					print "item is zio", self.msg
+					self.stop_mac_addr, __ = self.msg
+					if self.stop_mac_addr == self.mac_target:
+						print "I'm the one!"
+						self.stop()
+						#continue
+
+
 			self.rssi, self.ping = bt.rssi()
 			logging.debug("reading rssi: %s", self.rssi)
 
@@ -162,7 +191,7 @@ class PingThread(threading.Thread):
 
 					if self.rssi_avg is not None:
 						user_in_range(self)
-	
+				
 
 	def stop(self):
 		self.is_running = False

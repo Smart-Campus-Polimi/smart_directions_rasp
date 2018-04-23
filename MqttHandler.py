@@ -5,11 +5,15 @@ import threading
 import json
 import Queue
 import paho.mqtt.client as mqtt
+from collections import namedtuple
 
 import thread_test
 
 BUF_SIZE = 10
 q = Queue.Queue(BUF_SIZE)	
+
+StartMsg = namedtuple('StartMsg', ['mac_address', 'place_id', 'id', 'timestamp'])
+StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
 
 class Receiver:
 	def __init__(self, queue_sub):
@@ -20,34 +24,48 @@ class Receiver:
 			# Subscribing in on_connect() means that if we lose the connection and
 			# reconnect then subscribeptions will be renewed.
 			client.subscribe(thread_test.topic_name)
+			client.subscribe("stop_ping")
 			logging.debug("Subscribing to %s", thread_test.topic_name)
 
 	def on_message(self, client, userdata, msg):
 			#print msg.topic+" "+str(msg.payload)
 			logging.debug("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
-			msg_mqtt_raw = "[" + str(msg.payload.decode("utf-8")) + "]"
+			msg_mqtt_raw = str(msg.payload.decode("utf-8"))
 			
+			#can be deleted
 			if (msg.payload=="disconnect"):
 				logging.debug("disconnection through message")
 				client.disconnect()
 				return 
 
+			if msg.topic == thread_test.topic_name:
+				msg_mqtt_raw = "[" + msg_mqtt_raw + "]"
+			
+				try:
+					msg_mqtt = json.loads(msg_mqtt_raw)
+					logging.debug("json converted. Content: %s", msg_mqtt)
+				except ValueError, e:
+					logging.error("Malformed json %s. Json: %s", e, msg_mqtt_raw)
+					msg_mqtt = msg_mqtt_raw[:-1]
+					msg_mqtt = msg_mqtt[1:]
 
-			try:
-				msg_mqtt = json.loads(msg_mqtt_raw)
-				logging.debug("json concerted. Content: %s", msg_mqtt)
-			except ValueError, e:
-				logging.error("Malformed json %s. Json: %s", e, msg_mqtt_raw)
-				msg_mqtt = msg_mqtt_raw[:-1]
-				msg_mqtt = msg_mqtt[1:]
+				start_msg = StartMsg(id=msg_mqtt[0]['id'],
+						 mac_address=msg_mqtt[0]['mac_address'],
+						 place_id=msg_mqtt[0]['place_id'],
+						 timestamp=msg_mqtt[0]['timestamp'])
 
-			#add message to queue
-			if not self.queue_sub.full():
-				self.queue_sub.put(msg_mqtt[0])
-				logging.debug("putting msg %s in queue", msg_mqtt[0])
-			else:
-				logging.warning("Queue is full %s", q)
-				print "Queue is full!"
+				#add message to queue
+				if not self.queue_sub.full():
+					self.queue_sub.put(start_msg)
+					logging.debug("putting msg %s in queue", start_msg)
+				else:
+					logging.warning("Queue is full %s", q)
+					print "Queue is full!"
+
+			
+			elif msg.topic == "stop_ping":
+				stop_msg = StopMsg(mac_address=msg_mqtt_raw, timestamp="10:21:21")
+				self.queue_sub.put(stop_msg)
 
 
 	def on_disconnect(self, client, userdata, rc):
@@ -79,8 +97,11 @@ class MqttThread(threading.Thread):
 
 		while True:
 			if not self.queue_pub.empty():
-				sniffer_msg = self.queue_pub.get()
-				print "in mqtt thread ", sniffer_msg
+				final_pos_msg = self.queue_pub.get()
+				print "receiving a message from the main. the mac address ", final_pos_msg, " is arrived to the final destination"
+				
+				self.client.publish("stop_ping", final_pos_msg)
+				
 		#loop until disconnect
 		#client.loop_forever()
 			

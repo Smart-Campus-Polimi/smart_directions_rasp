@@ -26,6 +26,7 @@ logging.debug("directory: "+ pwd)
 broker_address = "10.0.2.15" 
 broker_address_cluster = "192.168.1.74"
 topic_name = "topic/rasp4/directions"
+proj_status = False
 
 
 def signal_handler(signal, frame):
@@ -112,6 +113,7 @@ if __name__ == "__main__":
 	mqtt_sub_q = Queue.Queue()
 	mqtt_pub_q = Queue.Queue()
 
+
 	t_mqtt = MqttHandler.MqttThread(mqtt_sub_q, mqtt_pub_q, broker_address)
 	t_mqtt.setDaemon(True)
 	logging.info("Setting up the mqtt thread")
@@ -122,26 +124,53 @@ if __name__ == "__main__":
 	t_mqtt.start()
 	
 	sniffer_queue = Queue.Queue()
+	stop_queue = Queue.Queue()
 
 	while True:
 		if not mqtt_sub_q.empty():
 			item = mqtt_sub_q.get()
-			logging.info("A new message is arrived. ID %s" ,item['id'])
+			logging.info("A new message is arrived. %s", item)
 			logging.info(item)
-			print "new message is arrived... ID is:", item['id']
-			user = PingHandler.PingThread(item, map_root, sniffer_queue)
-			t_sniffer.append(user)
+			print "new message is arrived... ID is:", item
 
-			logging.debug("Creating a new thread")
-			user.start()
+			if type(item).__name__ == "StartMsg":
+				print "START MSG"
+				user = PingHandler.PingThread(item, map_root, sniffer_queue, stop_queue)
+				t_sniffer.append(user)
+
+				logging.debug("Creating a new thread")
+				user.start()
+
+			elif type(item).__name__ == "StopMsg":
+				print "STOP MESSAGE"
+				mac_target, timestamp = item
+				print "stop msg istem: ", item
+				stop_queue.put(item)
+				
 
 		if not sniffer_queue.empty():
-			sniffer_msg = sniffer_queue.get()
-			logging.info("Reading proj queue msg: %s", sniffer_msg)
-			print "Reading proj queue msg: ", sniffer_msg
-			if "user arrived" in sniffer_msg:
-				print "receiving stop msg ", sniffer_msg[-17:]
-				logging.info("Stopping user %s", sniffer_msg[-17:])
-				mqtt_pub_q.put(sniffer_msg[-17:])
+			proj_msg = sniffer_queue.get()
+			logging.info("A projector msg is arrived")
+			logging.debug("Reading proj queue msg: %s", proj_msg)
 
+			if type(proj_msg).__name__ == "ProjMsg":
+				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
+				if not proj_status:
+					if new_proj_status:
+						logging.info("Turn ON the projector")
+						print "turn on the proj"
+						proj_status = new_proj_status
+				elif proj_status:
+					if not new_proj_status:
+						logging.info("Turn OFF the projector")
+						print "turn off the proj"
+						proj_status = new_proj_status
+
+				if final_pos:
+					print "user is arrived to the final step, sending msg to the other sniffers"
+					mqtt_pub_q.put(mac_target)
+			
+			#elif type(proj_msg).__name__ == "StopMsg":
+			#	print "qua"
+			#	sniffer_queue.put(proj_msg)
 
