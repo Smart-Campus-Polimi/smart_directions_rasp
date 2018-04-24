@@ -183,6 +183,7 @@ if __name__ == "__main__":
 				if final_pos:
 					print "user is arrived to the final step, sending msg to the other sniffers"
 					mqtt_pub_q.put(mac_target)
+					proj_status = False
 			
 			#elif type(proj_msg).__name__ == "StopMsg":
 			#	print "qua"
