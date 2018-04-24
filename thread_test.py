@@ -168,6 +168,7 @@ if __name__ == "__main__":
 
 			if type(proj_msg).__name__ == "ProjMsg":
 				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
+				print "new: ", new_proj_status, "old: ", proj_status
 				if not proj_status:
 					if new_proj_status:
 						logging.info("Turn ON the projector")
