@@ -90,7 +90,7 @@ def args_parser():
 
 
 def display_image(my_direction):
-	arrow_path = "arrow/Green_arrow_"+my_direction+".png"
+	arrow_path = "arrows/Green_arrow_"+my_direction+".png"
 	print arrow_path
 	subprocess.Popen(['killall', 'fbi'])
 	subprocess.Popen(['tvservice', '-p'])
