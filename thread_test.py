@@ -159,6 +159,7 @@ if __name__ == "__main__":
 				mac_target, timestamp = item
 				print "stop msg istem: ", item
 				stop_queue.put(item)
+				turn_off_screen()
 				
 
 		if not sniffer_queue.empty():
