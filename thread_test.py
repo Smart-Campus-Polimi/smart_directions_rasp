@@ -107,8 +107,8 @@ if __name__ == "__main__":
 	signal.signal(signal.SIGINT, signal_handler)
 	print "SM4RT_D1R3CT10Nz v0.3 thread", rasp_id
 	logging.info("Starting main...")
-	#logo_path = 'arrows/smart_dir_logo.png'
-	#subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', logo_path])
+	logo_path = 'arrows/smart_dir_logo.png'
+	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', logo_path])
 	args_parser()
 
 	if rasp:
