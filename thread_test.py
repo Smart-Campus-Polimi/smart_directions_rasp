@@ -89,6 +89,17 @@ def args_parser():
 			sys.exit(2)
 
 
+def display_image(my_direction):
+	arrow_path = "Green_arrow_"+my_direction+".png"
+	print path
+	subprocess.Popen(['killall', 'fbi'])
+	subprocess.Popen(['tvservice', '-p'])
+	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path])
+
+def turn_off_screen():
+	subprocess.Popen(['killall', 'fbi'])
+	subprocess.Popen(['tvservice', '-o'])
+
 #### MAIN ####
 if __name__ == "__main__":
 	logging.info("_____________________________")
@@ -158,13 +169,15 @@ if __name__ == "__main__":
 				if not proj_status:
 					if new_proj_status:
 						logging.info("Turn ON the projector")
-						print "turn on the proj"
+						print "turn on the proj ", direction
+						display_image(direction)
 						proj_status = new_proj_status
 				elif proj_status:
 					if not new_proj_status:
 						logging.info("Turn OFF the projector")
 						print "turn off the proj"
 						proj_status = new_proj_status
+						turn_off_screen()
 
 				if final_pos:
 					print "user is arrived to the final step, sending msg to the other sniffers"
