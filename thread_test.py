@@ -38,18 +38,17 @@ def signal_handler(signal, frame):
 	for user in t_sniffer:
 		logging.debug("closing thread %s", user)
 		user.stop()
-
 	logging.info("stopping all ping thread")
+	
 	t_mqtt.stop()
 	logging.info("Stopping mqtt thread")
+
 	try:
 		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
 		logging.debug("Closing l2ping process %s", killall_ping)
 	except subprocess.CalledProcessError as e:
 		logging.warning(e)
 		logging.warning("No l2ping process")
-
-	
 
 	logging.info("Closing the program")
 	sys.exit(0)
@@ -91,14 +90,35 @@ def args_parser():
 
 def display_image(my_direction):
 	arrow_path = "arrows/Green_arrow_"+my_direction+".png"
-	print arrow_path
-	subprocess.Popen(['killall', 'fbi'])
-	subprocess.Popen(['tvservice', '-p'])
-	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path])
+
+	print "show image"
+	logging.info("Shows image")
+	logging.debug("Direction: %s", my_direction)
+	logging.debug("Image path: %s", arrow_path)
+	
+	logging.info("Killing fbi")
+	subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+
+	logging.info("Opening tvservice (turn on the screen)")
+	subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
+
+	logging.info("Displaying image")
+	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE)
 
 def turn_off_screen():
+	print "Turning off the screen"
+	logging.info("Turning off the screen")
+	logging.info("Killing fbi")
 	subprocess.Popen(['killall', 'fbi'])
+	logging.info("Closing tvservice (turn off the screen)")
 	subprocess.Popen(['tvservice', '-o'])
+
+def opening_map(map_path):
+	logging.info("Opening map")
+	tree = ET.parse(map_path)
+	root = tree.getroot()
+	return root
+
 
 #### MAIN ####
 if __name__ == "__main__":
@@ -116,11 +136,8 @@ if __name__ == "__main__":
 		broker_address = broker_address_cluster
 		logging.debug("Set broker address in rasp mode: "+ broker_address)
 
-	#opening map
-	logging.info("Opening map")
-	tree = ET.parse('map.xml')
-	map_root = tree.getroot()
-
+	map_root = opening_map('map.xml')
+	
 	logging.info("the broker_address is "+broker_address)
 
 	mqtt_sub_q = Queue.Queue()
@@ -131,6 +148,7 @@ if __name__ == "__main__":
 	t_mqtt.setDaemon(True)
 	logging.info("Setting up the mqtt thread")
 	
+	#maybe is not useful to have a global var
 	global t_sniffer
 	t_sniffer = []
 
@@ -142,12 +160,14 @@ if __name__ == "__main__":
 	while True:
 		if not mqtt_sub_q.empty():
 			item = mqtt_sub_q.get()
-			logging.info("A new message is arrived. %s", item)
+			logging.info("A new message is arrived.")
 			logging.info(item)
-			print "new message is arrived... ID is:", item
+			print "new message is arrived"
 
 			if type(item).__name__ == "StartMsg":
-				print "START MSG"
+				logging.info("The type is START MSG")
+				logging.debug("Message content %s", item)
+				print "The type is START MSG"
 				user = PingHandler.PingThread(item, map_root, sniffer_queue, stop_queue)
 				t_sniffer.append(user)
 
@@ -155,9 +175,10 @@ if __name__ == "__main__":
 				user.start()
 
 			elif type(item).__name__ == "StopMsg":
-				print "STOP MESSAGE"
+				logging.info("The type is STOP MSG")
+				logging.debug("Message content %s", item)
+				print "the type is STOP MESSAGE"
 				mac_target, timestamp = item
-				print "stop msg istem: ", item
 				stop_queue.put(item)
 				turn_off_screen()
 				
@@ -168,30 +189,28 @@ if __name__ == "__main__":
 			logging.debug("Reading proj queue msg: %s", proj_msg)
 
 			if type(proj_msg).__name__ == "ProjMsg":
+				logging.debug("The type is proj_msg")
 				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
-				print "new: ", new_proj_status, "old: ", proj_status
+				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
 				if not proj_status:
+					logging.debug("if the status if off (%s)", proj_status)
 					if new_proj_status:
-						logging.info("Turn ON the projector")
-						print "turn on the proj ", direction
+						logging.debug("the new status is on (%s)", new_proj_status)
 						display_image(direction)
 						proj_status = new_proj_status
 				elif proj_status:
+					logging.debug("if the status if on (%s)", proj_status)
 					if not new_proj_status:
-						logging.info("Turn OFF the projector")
-						print "turn off the proj"
+						logging.debug("the new status is OFF (%s)", new_proj_status)
 						proj_status = new_proj_status
 						turn_off_screen()
 
 				if final_pos:
 					print "user is arrived to the final step, sending msg to the other sniffers"
-					time.sleep(5)
+					logging.info("The user is in the final step")
+					time.sleep(3)
+					logging.info("Sending msg to the others sniffers")
 					mqtt_pub_q.put(mac_target)
 					turn_off_screen()
-					#subprocess.Popen(['killall', 'fbi'])
 					proj_status = False
-			
-			#elif type(proj_msg).__name__ == "StopMsg":
-			#	print "qua"
-			#	sniffer_queue.put(proj_msg)
 

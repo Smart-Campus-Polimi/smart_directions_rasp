@@ -52,7 +52,6 @@ def check_proximity(rssi):
 	else:
 		return 9
 
-
 def initialize_values():
 	return True, 0, 0, 0, False, False
 
@@ -68,27 +67,25 @@ def user_out_of_range(self):
 				turn_off_projector(self)
 				
 def turn_off_projector(self):
-	#logging.info("User passes the destination, turn OFF the projector")	
 	self.print_dir = False
 	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp="10:12:12")
+	
 	logging.debug("Projector msg: %s", p_msg)
-	#self.queue.put("turn off the projector")
-	self.queue.put(p_msg)
 	logging.info("Putting in queue the proj_msg")
-	print "users pass the rasp, turn off proj"
+
+	self.queue.put(p_msg)
+	
 
 def turn_on_projector(self, direct):
-	#logging.info("User arrives to destination, turn ON the projector")
-	logging.debug("Direction: ARROW %s", direct)
-	print "ARROW", direct
-
 	self.print_dir = True
 	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp="10:12:12")
+	
+	logging.debug("Direction: ARROW %s", direct)
 	logging.debug("Projector msg: %s", p_msg)
-	self.queue.put(p_msg)
 	logging.info("Putting in queue the proj_msg")
+	self.queue.put(p_msg)
+	
 
-	#self.queue.put("turn on projector")
 
 def user_in_range(self):
 	self.position = check_proximity(self.rssi_avg)
@@ -158,20 +155,20 @@ class PingThread(threading.Thread):
 		logging.info("staring while loop")
 		while self.is_running:
 
+			#TODO method
 			if not self.stop_queue.empty():
 				self.msg = self.stop_queue.get()
-				print "msg in ping handler", self.msg
+				logging.info("A new message is received")
+				logging.debug("Msg info", self.msg)
 				if type(self.msg).__name__ == "StopMsg":
-					print "item is zio", self.msg
+					logging.info("The message is a StopMsg")
 					self.stop_mac_addr, __ = self.msg
 					if self.stop_mac_addr == self.mac_target:
-						print "I'm the one!"
 						self.stop()
-						#continue
 
 
 			self.rssi, self.ping = bt.rssi()
-			logging.debug("reading rssi: %s", self.rssi)
+			#logging.debug("reading rssi: %s", self.rssi)
 
 			if self.rssi is not None:
 				if self.rssi == "OOR":
@@ -194,6 +191,7 @@ class PingThread(threading.Thread):
 				
 
 	def stop(self):
+		logging.info("Closing the thread")
 		self.is_running = False
 		f.close()
 

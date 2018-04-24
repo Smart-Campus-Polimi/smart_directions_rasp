@@ -19,16 +19,14 @@ class Receiver:
 	def __init__(self, queue_sub):
 		self.queue_sub = queue_sub
 	def on_connect(self, client, userdata, flags, rc):
-			#print "Connected with result code "+str(rc)
 			logging.debug("MQTT: connected with result code "+str(rc))
-			# Subscribing in on_connect() means that if we lose the connection and
-			# reconnect then subscribeptions will be renewed.
+			
+			#TODO subscribing topic list
 			client.subscribe(thread_test.topic_name)
 			client.subscribe("stop_ping")
 			logging.debug("Subscribing to %s", thread_test.topic_name)
 
 	def on_message(self, client, userdata, msg):
-			#print msg.topic+" "+str(msg.payload)
 			logging.debug("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
 			msg_mqtt_raw = str(msg.payload.decode("utf-8"))
 			
@@ -84,7 +82,7 @@ class MqttThread(threading.Thread):
 		self.host = host
 
 	def run(self):
-		print "creating client --- host: ", self.host
+		print "Creating client ---> Host: ", self.host
 		logging.info("Mqtt thread runs")
 		receiver = Receiver(self.queue_sub)
 		self.client.loop_start()
@@ -93,12 +91,13 @@ class MqttThread(threading.Thread):
 		self.client.on_message = receiver.on_message
 
 		self.client.connect_async(self.host, 1883)
-		logging.info("opening mqtt connection")
+		logging.info("Opening mqtt connection")
 
 		while True:
 			if not self.queue_pub.empty():
 				final_pos_msg = self.queue_pub.get()
-				print "receiving a message from the main. the mac address ", final_pos_msg, " is arrived to the final destination"
+				logging.info("%s is arrived to the final destination")
+				print final_pos_msg, " is arrived to the final destination"
 				
 				self.client.publish("stop_ping", final_pos_msg)
 				
@@ -107,5 +106,6 @@ class MqttThread(threading.Thread):
 			
 	
 	def stop(self):
-		self.client.disconnect()
 		logging.info("disconnect mqtt")
+		self.client.disconnect()
+		
