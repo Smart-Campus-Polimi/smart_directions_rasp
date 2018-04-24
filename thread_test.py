@@ -92,8 +92,7 @@ def args_parser():
 def display_image(my_direction):
 	arrow_path = "arrows/Green_arrow_"+my_direction+".png"
 	print arrow_path
-	subprocess.Popen(['killall', 'fbi'])
-	subprocess.Popen(['tvservice', '-p'])
+	#subprocess.Popen(['tvservice', '-p'])
 	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path])
 
 def turn_off_screen():
@@ -107,7 +106,6 @@ if __name__ == "__main__":
 	signal.signal(signal.SIGINT, signal_handler)
 	print "SM4RT_D1R3CT10Nz v0.3 thread", rasp_id
 	logging.info("Starting main...")
-	subprocess.Popen(['killall', 'fbi'])
 	subprocess.Popen(['tvservice', '-p'])
 	logo_path = 'arrows/smart_dir_logo.png'
 	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', logo_path])
@@ -186,6 +184,7 @@ if __name__ == "__main__":
 					print "user is arrived to the final step, sending msg to the other sniffers"
 					time.sleep(5)
 					mqtt_pub_q.put(mac_target)
+					subprocess.Popen(['killall', 'fbi'])
 					proj_status = False
 			
 			#elif type(proj_msg).__name__ == "StopMsg":
