@@ -118,7 +118,7 @@ def display_image(my_direction):
 	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE)
 
 def turn_off_screen():
-	proj_status = False
+	#proj_status = False
 	print "Turning off the screen"
 	logging.info("Turning off the screen")
 	logging.info("Killing fbi")
@@ -194,6 +194,7 @@ if __name__ == "__main__":
 				print "the type is STOP MESSAGE"
 				mac_target, timestamp = item
 				stop_queue.put(item)
+				proj_status = False
 				turn_off_screen()
 				
 
