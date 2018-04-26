@@ -102,7 +102,7 @@ class MqttThread(threading.Thread):
 				logging.info("%s is arrived to the final destination", final_pos_msg)
 				print final_pos_msg, " is arrived to the final destination"
 				
-				self.client.publish("stop_ping", final_pos_msg)
+				self.client.publish("stop_ping", final_pos_msg, qos=1)
 				logging.info("Sending the final message")
 				
 		#loop until disconnect
