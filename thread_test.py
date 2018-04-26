@@ -209,7 +209,7 @@ if __name__ == "__main__":
 				logging.debug("The type is proj_msg")
 				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
 				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
-				if not proj_status && not close_proj:
+				if not proj_status and not close_proj:
 					logging.debug("if the status if off (%s)", proj_status)
 					if new_proj_status:
 						logging.debug("the new status is on (%s)", new_proj_status)
