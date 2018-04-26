@@ -118,6 +118,7 @@ def display_image(my_direction):
 	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE)
 
 def turn_off_screen():
+	proj_status = False
 	print "Turning off the screen"
 	logging.info("Turning off the screen")
 	logging.info("Killing fbi")
