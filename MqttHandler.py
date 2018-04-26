@@ -37,6 +37,7 @@ class Receiver:
 				return 
 
 			if msg.topic == thread_test.topic_name:
+				logging.info("starting msg is received")
 				msg_mqtt_raw = "[" + msg_mqtt_raw + "]"
 			
 				try:
@@ -62,7 +63,9 @@ class Receiver:
 
 			
 			elif msg.topic == "stop_ping":
+				logging.info("Stopping msg is received")
 				stop_msg = StopMsg(mac_address=msg_mqtt_raw, timestamp="10:21:21")
+				logging.info("Putting the msg in the sub queue")
 				self.queue_sub.put(stop_msg)
 
 
@@ -100,6 +103,7 @@ class MqttThread(threading.Thread):
 				print final_pos_msg, " is arrived to the final destination"
 				
 				self.client.publish("stop_ping", final_pos_msg)
+				logging.info("Sending the final message")
 				
 		#loop until disconnect
 		#client.loop_forever()
