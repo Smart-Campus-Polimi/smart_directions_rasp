@@ -27,7 +27,7 @@ class Receiver:
 			logging.debug("Subscribing to %s", thread_test.topic_name)
 
 	def on_message(self, client, userdata, msg):
-			logging.debug("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
+			logging.info("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
 			msg_mqtt_raw = str(msg.payload.decode("utf-8"))
 			
 			#can be deleted
