@@ -22,8 +22,8 @@ class Receiver:
 			logging.debug("MQTT: connected with result code "+str(rc))
 			
 			#TODO subscribing topic list
-			client.subscribe(thread_test.topic_name)
-			client.subscribe("stop_ping")
+			client.subscribe(thread_test.topic_name, qos=1)
+			client.subscribe("stop_ping", qos=1)
 			logging.debug("Subscribing to %s", thread_test.topic_name)
 
 	def on_message(self, client, userdata, msg):
