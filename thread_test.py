@@ -111,7 +111,7 @@ def display_image(my_direction):
 	subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 
 	logging.info("Opening tvservice (turn on the screen)")
-	subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
+	#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
 	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 
 	logging.info("Displaying image")
@@ -123,7 +123,8 @@ def turn_off_screen():
 	logging.info("Killing fbi")
 	subprocess.Popen(['killall', 'fbi'])
 	logging.info("Closing tvservice (turn off the screen)")
-	subprocess.Popen(['tvservice', '-o'])
+	#subprocess.Popen(['tvservice', '-o'])
+	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 
 def opening_map(map_path):
 	logging.info("Opening map")
