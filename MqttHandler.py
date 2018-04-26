@@ -96,7 +96,7 @@ class MqttThread(threading.Thread):
 		while True:
 			if not self.queue_pub.empty():
 				final_pos_msg = self.queue_pub.get()
-				logging.info("%s is arrived to the final destination")
+				logging.info("%s is arrived to the final destination", final_pos_msg)
 				print final_pos_msg, " is arrived to the final destination"
 				
 				self.client.publish("stop_ping", final_pos_msg)
