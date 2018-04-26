@@ -159,7 +159,7 @@ class PingThread(threading.Thread):
 			if not self.stop_queue.empty():
 				self.msg = self.stop_queue.get()
 				logging.info("A new message is received")
-				logging.debug("Msg info", self.msg)
+				logging.debug("Msg info %s", self.msg)
 				if type(self.msg).__name__ == "StopMsg":
 					logging.info("The message is a StopMsg")
 					self.stop_mac_addr, __ = self.msg
