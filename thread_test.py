@@ -44,9 +44,14 @@ def signal_handler(signal, frame):
 	logging.info("Stopping mqtt thread")
 
 	#TODO try catch
-	killall_ping = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
-	logging.debug("Closing l2ping process %s", killall_ping)
+	try:
+		killall_ping = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
+		logging.debug("Closing l2ping process %s", killall_ping)
+	except subprocess.CalledProcessError as e:
+		logging.warning(e)
+		logging.warning("No fbi process")
 	
+	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 	try:
 		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
 		
@@ -107,6 +112,7 @@ def display_image(my_direction):
 
 	logging.info("Opening tvservice (turn on the screen)")
 	subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
+	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 
 	logging.info("Displaying image")
 	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE)
