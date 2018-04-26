@@ -24,7 +24,7 @@ logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
 
 broker_address = "10.0.2.15" 
-broker_address_cluster = "192.168.1.74"
+broker_address_cluster = "192.168.1.80"
 topic_name = "topic/rasp4/directions"
 proj_status = False
 
