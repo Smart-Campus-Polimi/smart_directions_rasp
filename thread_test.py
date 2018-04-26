@@ -43,9 +43,13 @@ def signal_handler(signal, frame):
 	t_mqtt.stop()
 	logging.info("Stopping mqtt thread")
 
+	#TODO try catch
+	killall_ping = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
+	logging.debug("Closing l2ping process %s", killall_ping)
+	
 	try:
 		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
-		killall_fbi = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
+		
 		logging.debug("Closing l2ping process %s", killall_ping)
 		logging.debug("Closing fbi process %s", killall_fbi)
 	except subprocess.CalledProcessError as e:
