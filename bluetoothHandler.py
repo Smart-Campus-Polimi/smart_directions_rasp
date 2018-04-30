@@ -44,6 +44,11 @@ class bluetoothHandler:
 			return "OOR", None
 	
 
+	def stop_proc(self):
+		logging.info("Terminate thread infinite ping")
+		print "terminate thread ping"
+		self.ping.terminate()
+
 #check the ping reset
 def is_ping(line, mac_addr):
 	if "Ping" in line:

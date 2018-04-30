@@ -145,8 +145,8 @@ class PingThread(threading.Thread):
 		logging.info("starting bluetooth handler")
 		print "starting ping ... "
 
-		bt = bluetoothHandler.bluetoothHandler()
-		bt.start(self.mac_target)
+		self.bt = bluetoothHandler.bluetoothHandler()
+		self.bt.start(self.mac_target)
 
 		self.is_running, self.sum_rssi, self.count, self.rssi_avg, self.engaged, self.print_dir = initialize_values()
 		logging.debug("setting up params. is_running %s, engaged %s", self.is_running, self.engaged)
@@ -156,7 +156,7 @@ class PingThread(threading.Thread):
 		while self.is_running:
 
 			#TODO method
-			print self.stop_queue.qsize()
+
 			if not self.stop_queue.empty():
 				self.msg = self.stop_queue.get()
 				logging.info("A new message is received")
@@ -169,7 +169,7 @@ class PingThread(threading.Thread):
 						self.stop()
 
 
-			self.rssi, self.ping = bt.rssi()
+			self.rssi, self.ping = self.bt.rssi()
 			#logging.debug("reading rssi: %s", self.rssi)
 
 			if self.rssi is not None:
@@ -195,6 +195,7 @@ class PingThread(threading.Thread):
 	def stop(self):
 		logging.info("Closing the thread")
 		self.is_running = False
+		self.bt.stop_proc()
 		f.close()
 
 	
