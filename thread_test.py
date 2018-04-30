@@ -231,7 +231,8 @@ if __name__ == "__main__":
 				user.start()
 				timer = threading.Timer(15.0, stop_timer, [mac_thread])
 				timer.start() 
-				close_proj = False
+				proj_status = False
+				#close_proj = True
 
 				for t in t_sniffer:
 					print t_sniffer
@@ -255,7 +256,7 @@ if __name__ == "__main__":
 				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
 				
 				if is_in_list(mac_target):
-					if not proj_status and not close_proj:
+					if not proj_status:# and not close_proj:
 						logging.debug("if the status if off (%s)", proj_status)
 						if new_proj_status:
 							logging.debug("the new status is on (%s)", new_proj_status)
