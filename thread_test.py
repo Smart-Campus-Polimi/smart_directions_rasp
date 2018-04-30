@@ -11,11 +11,22 @@ import subprocess
 import logging
 import xml.etree.ElementTree as ET
 import pprint as pp
+from collections import namedtuple
 #my imports
 import MqttHandler
 import PingHandler
 
 
+##### GLOBAL VARS ####
+global t_sniffer
+t_sniffer = []
+global proj_status
+proj_status = False
+global close_proj
+close_proj = True
+
+
+StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
 pwd = subprocess.check_output(['pwd']).rstrip() + "/"
 rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
 logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,8 +37,15 @@ logging.debug("directory: "+ pwd)
 broker_address = "10.0.2.15" 
 broker_address_cluster = "192.168.1.74"
 topic_name = "topic/rasp4/directions"
-proj_status = False
 
+def stop_timer(mac_addr):
+	print "Stop timer"
+	logging.debug("Stop timer")
+
+	if is_in_list(mac_addr):
+		#mqtt_pub_q.put(mac_addr)
+		stop_msg = StopMsg(mac_address=mac_addr, timestamp="10:21:21")
+		stop_single_process(stop_msg)
 
 def signal_handler(signal, frame):
 	logging.info("Signal Handler arrived")
@@ -36,6 +54,7 @@ def signal_handler(signal, frame):
 	#close all the thread in thread list
 	logging.debug("the thread are: %s", t_sniffer)
 	for user in t_sniffer:
+		print t_sniffer
 		logging.debug("closing thread %s", user)
 		user.stop()
 	logging.info("stopping all ping thread")
@@ -134,6 +153,25 @@ def opening_map(map_path):
 	return root
 
 
+def is_in_list(mac_addr):
+	for t in t_sniffer:
+		if mac_addr in t:
+			return True
+	return False
+
+
+def stop_single_process(item):
+	mac_target, timestamp = item
+	print t_sniffer
+	logging.debug("Stop the process %s", mac_target)
+
+	if is_in_list(mac_target):
+		print "sending in queue stop"
+		stop_queue.put(item)
+		proj_status = False
+		close_proj = True
+		turn_off_screen()
+
 #### MAIN ####
 if __name__ == "__main__":
 	logging.info("_____________________________")
@@ -161,17 +199,17 @@ if __name__ == "__main__":
 	t_mqtt = MqttHandler.MqttThread(mqtt_sub_q, mqtt_pub_q, broker_address)
 	t_mqtt.setDaemon(True)
 	logging.info("Setting up the mqtt thread")
-	
-	#maybe is not useful to have a global var
-	global t_sniffer
-	t_sniffer = []
+
 
 	t_mqtt.start()
 	
+	global sniffer_queue
 	sniffer_queue = Queue.Queue()
+	global stop_queue
 	stop_queue = Queue.Queue()
+	print stop_queue
 
-	while True:
+	while True: 
 		if not mqtt_sub_q.empty():
 			item = mqtt_sub_q.get()
 			logging.info("A new message is arrived.")
@@ -183,21 +221,24 @@ if __name__ == "__main__":
 				logging.debug("Message content %s", item)
 				print "The type is START MSG"
 				user = PingHandler.PingThread(item, map_root, sniffer_queue, stop_queue)
-				t_sniffer.append(user)
+				mac_thread = item[0]
+				t_sniffer.append([user, mac_thread])
 				
 				logging.debug("Creating a new thread")
 				user.start()
+				timer = threading.Timer(15.0, stop_timer, [mac_thread])
+				timer.start() 
 				close_proj = False
+
+				for t in t_sniffer:
+					print t_sniffer
 
 			elif type(item).__name__ == "StopMsg":
 				logging.info("The type is STOP MSG")
 				logging.debug("Message content %s", item)
 				print "the type is STOP MESSAGE"
-				mac_target, timestamp = item
-				stop_queue.put(item)
-				proj_status = False
-				close_proj = True
-				turn_off_screen()
+				
+				stop_single_process(item)
 				
 
 		if not sniffer_queue.empty():
@@ -209,25 +250,30 @@ if __name__ == "__main__":
 				logging.debug("The type is proj_msg")
 				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
 				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
-				if not proj_status and not close_proj:
-					logging.debug("if the status if off (%s)", proj_status)
-					if new_proj_status:
-						logging.debug("the new status is on (%s)", new_proj_status)
-						display_image(direction)
-						proj_status = new_proj_status
-				elif proj_status:
-					logging.debug("if the status if on (%s)", proj_status)
-					if not new_proj_status:
-						logging.debug("the new status is OFF (%s)", new_proj_status)
-						proj_status = new_proj_status
-						turn_off_screen()
+				
+				if is_in_list(mac_target):
+					if not proj_status and not close_proj:
+						logging.debug("if the status if off (%s)", proj_status)
+						if new_proj_status:
+							logging.debug("the new status is on (%s)", new_proj_status)
+							display_image(direction)
+							proj_status = new_proj_status
+					elif proj_status:
+						logging.debug("if the status if on (%s)", proj_status)
+						if not new_proj_status:
+							logging.debug("the new status is OFF (%s)", new_proj_status)
+							proj_status = new_proj_status
+							turn_off_screen()
 
-				if final_pos:
-					print "user is arrived to the final step, sending msg to the other sniffers"
-					logging.info("The user is in the final step")
-					time.sleep(3)
-					logging.info("Sending msg to the others sniffers")
-					mqtt_pub_q.put(mac_target)
-					turn_off_screen()
-					proj_status = False
+					if final_pos:
+						print "user is arrived to the final step, sending msg to the other sniffers"
+						logging.info("The user is in the final step")
+						time.sleep(3)
+						logging.info("Sending msg to the others sniffers")
+						mqtt_pub_q.put(mac_target)
+						#turn_off_screen()
+						#proj_status = False
+						print t_sniffer
+
+		t_sniffer = [t for t in t_sniffer if t[0].is_alive()]
 
