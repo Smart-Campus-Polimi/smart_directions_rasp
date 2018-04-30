@@ -229,7 +229,7 @@ if __name__ == "__main__":
 				
 				logging.debug("Creating a new thread")
 				user.start()
-				timer = threading.Timer(15.0, stop_timer, [mac_thread])
+				timer = threading.Timer(180.0, stop_timer, [mac_thread])
 				timer.start() 
 				close_proj = False
 
