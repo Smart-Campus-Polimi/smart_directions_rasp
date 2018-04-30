@@ -20,10 +20,18 @@ import PingHandler
 ##### GLOBAL VARS ####
 global t_sniffer
 t_sniffer = []
+global timer_sniffer
+timer_sniffer = []
 global proj_status
 proj_status = False
 global close_proj
 close_proj = True
+
+global sniffer_queue
+sniffer_queue = Queue.Queue()
+global stop_queue
+stop_queue = Queue.Queue()
+print stop_queue
 
 
 StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
@@ -85,7 +93,8 @@ def signal_handler(signal, frame):
 
 
 	#close timer
-	timer.cancel()
+	for t in timer_sniffer:
+		t[0].cancel()
 
 	sys.exit(0)
 
@@ -178,6 +187,11 @@ def stop_single_process(item):
 		close_proj = True
 		turn_off_screen()
 
+	for t in timer_sniffer:
+		if mac_target in t:
+			print "delete thread ", t[1]
+			t[0].cancel()
+
 #### MAIN ####
 if __name__ == "__main__":
 	logging.info("_____________________________")
@@ -209,11 +223,7 @@ if __name__ == "__main__":
 
 	t_mqtt.start()
 	
-	global sniffer_queue
-	sniffer_queue = Queue.Queue()
-	global stop_queue
-	stop_queue = Queue.Queue()
-	print stop_queue
+
 
 	while True: 
 		if not mqtt_sub_q.empty():
@@ -232,13 +242,13 @@ if __name__ == "__main__":
 				
 				logging.debug("Creating a new thread")
 				user.start()
+				#create timer
 				timer = threading.Timer(180.0, stop_timer, [mac_thread])
-				timer.start() 
+				timer.start()
+				timer_sniffer.append([timer, mac_thread]) 
+				
 				proj_status = False
-				#close_proj = True
 
-				for t in t_sniffer:
-					print t_sniffer
 
 			elif type(item).__name__ == "StopMsg":
 				logging.info("The type is STOP MSG")
