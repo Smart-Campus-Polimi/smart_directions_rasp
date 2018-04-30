@@ -85,6 +85,7 @@ def signal_handler(signal, frame):
 
 
 	#close timer
+	timer.cancel()
 
 	sys.exit(0)
 
