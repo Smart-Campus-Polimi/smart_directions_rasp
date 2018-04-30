@@ -57,8 +57,8 @@ def signal_handler(signal, frame):
 	
 	for user in t_sniffer:
 		print t_sniffer
-		logging.debug("closing thread %s", user)
-		user.stop()
+		logging.debug("closing thread %s", user[0])
+		user[0].stop()
 	logging.info("stopping all ping thread")
 	
 	t_mqtt.stop()
