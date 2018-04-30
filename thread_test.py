@@ -53,6 +53,8 @@ def signal_handler(signal, frame):
 
 	#close all the thread in thread list
 	logging.debug("the thread are: %s", t_sniffer)
+	print t_sniffer
+	
 	for user in t_sniffer:
 		print t_sniffer
 		logging.debug("closing thread %s", user)
