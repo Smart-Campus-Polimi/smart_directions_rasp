@@ -53,10 +53,12 @@ def signal_handler(signal, frame):
 
 	#close all the thread in thread list
 	logging.debug("the thread are: %s", t_sniffer)
+	print t_sniffer
+	
 	for user in t_sniffer:
 		print t_sniffer
-		logging.debug("closing thread %s", user)
-		user.stop()
+		logging.debug("closing thread %s", user[0])
+		user[0].stop()
 	logging.info("stopping all ping thread")
 	
 	t_mqtt.stop()
@@ -83,6 +85,7 @@ def signal_handler(signal, frame):
 
 
 	#close timer
+	timer.cancel()
 
 	sys.exit(0)
 
@@ -229,7 +232,7 @@ if __name__ == "__main__":
 				
 				logging.debug("Creating a new thread")
 				user.start()
-				timer = threading.Timer(15.0, stop_timer, [mac_thread])
+				timer = threading.Timer(180.0, stop_timer, [mac_thread])
 				timer.start() 
 				proj_status = False
 				#close_proj = True
