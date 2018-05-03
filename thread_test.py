@@ -243,7 +243,7 @@ if __name__ == "__main__":
 				logging.debug("Creating a new thread")
 				user.start()
 				#create timer
-				timer = threading.Timer(180.0, stop_timer, [mac_thread])
+				timer = threading.Timer(600.0, stop_timer, [mac_thread])
 				timer.start()
 				timer_sniffer.append([timer, mac_thread]) 
 				
@@ -285,7 +285,7 @@ if __name__ == "__main__":
 					if final_pos:
 						print "user is arrived to the final step, sending msg to the other sniffers"
 						logging.info("The user is in the final step")
-						time.sleep(3)
+						time.sleep(15)
 						logging.info("Sending msg to the others sniffers")
 						mqtt_pub_q.put(mac_target)
 						#turn_off_screen()
