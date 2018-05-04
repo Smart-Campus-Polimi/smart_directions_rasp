@@ -42,18 +42,10 @@ logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.INFO, format='
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
 
-broker_address = "10.0.2.15" 
-broker_address_cluster = "192.168.1.74"
+broker_address = "192.168.1.74" 
+broker_address_xub = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
 
-def stop_timer(mac_addr):
-	print "Stop timer"
-	logging.debug("Stop timer")
-
-	if is_in_list(mac_addr):
-		#mqtt_pub_q.put(mac_addr)
-		stop_msg = StopMsg(mac_address=mac_addr, timestamp="10:21:21")
-		stop_single_process(stop_msg)
 
 def signal_handler(signal, frame):
 	logging.info("Signal Handler arrived")
@@ -100,7 +92,7 @@ def signal_handler(signal, frame):
 
 def args_parser():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hrv', ['help', 'rasp=', 'verbose='])
+		opts, args = getopt.getopt(sys.argv[1:], 'fhxv', ['help', 'fbi=','xub=', 'verbose='])
 		logging.debug("Input params %s", opts)
 	except getopt.GetoptError as err:
 		print str(err)
@@ -110,8 +102,11 @@ def args_parser():
 		logging.warning("exit program")
 		sys.exit(2)
 
-	global rasp
-	rasp = 0
+	global xub
+	global fbi_opt
+	fbi_opt = 1
+	xub = 0
+
 	for opt, arg in opts:
 		if opt in ('-h', '--help'):
 			logging.debug("help")
@@ -119,12 +114,15 @@ def args_parser():
 			#usage()
 			logging.info("exit program")
 			sys.exit(2)
-		elif opt in ('-r', '--rasp'):
-			rasp = 1
-			logging.debug("rasp mode enabled %d", rasp)
+		elif opt in ('-x', '--xub'):
+			xub = 1
+			logging.debug("xub mode enabled %d", xub)
 		elif opt in ('-v', '--verbose'):
 			logging.getLogger().setLevel(logging.DEBUG)
 			logging.debug("vervose mode enabled %s", opt)
+		elif opt in ('-f', '--fbi'):
+			fbi_opt = 0
+			logging.debug("fbi mode disabled %d", xub)
 		else:
 			#usage()
 			logging.warning("some error in params ",params)
@@ -137,19 +135,20 @@ def display_image(my_direction):
 	arrow_path = "arrows/Green_arrow_"+my_direction+".png"
 
 	print "show image"
-	logging.info("Shows image")
-	logging.debug("Direction: %s", my_direction)
-	logging.debug("Image path: %s", arrow_path)
+	if fbi_opt:
+		logging.info("Shows image")
+		logging.debug("Direction: %s", my_direction)
+		logging.debug("Image path: %s", arrow_path)
 	
-	logging.info("Killing fbi")
-	subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+		logging.info("Killing fbi")
+		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 
-	logging.info("Opening tvservice (turn on the screen)")
-	#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
-	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
+		logging.info("Opening tvservice (turn on the screen)")
+		#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
+		subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 
-	logging.info("Displaying image")
-	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE)
+		logging.info("Displaying image")
+		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE)
 
 def turn_off_screen():
 	#proj_status = False
@@ -182,6 +181,7 @@ def stop_single_process(item):
 
 	if is_in_list(mac_target):
 		print "sending in queue stop"
+		print item
 		stop_queue.put(item)
 		proj_status = False
 		close_proj = True
@@ -192,6 +192,19 @@ def stop_single_process(item):
 			print "delete thread ", t[1]
 			t[0].cancel()
 
+def stop_timer(mac_addr):
+	print "Stop timer"
+	logging.debug("Stop timer")
+
+	if is_in_list(mac_addr):
+		print mac_addr, "is in timer list"
+		#mqtt_pub_q.put(mac_addr)
+		stop_msg = StopMsg(mac_address=mac_addr, timestamp="10:21:21")
+		stop_single_process(stop_msg)
+	else: 
+		print mac_address, "not in list ", t_sniffer
+
+
 def create_user(my_item):
 	user = PingHandler.PingThread(my_item, map_root, sniffer_queue, stop_queue)
 	t_sniffer.append([user, mac_thread])
@@ -199,7 +212,7 @@ def create_user(my_item):
 	logging.debug("Creating a new thread")
 	user.start()
 	#create timer
-	timer = threading.Timer(600.0, stop_timer, [mac_thread])
+	timer = threading.Timer(60.0, stop_timer, [mac_thread])
 	timer.start()
 	timer_sniffer.append([timer, mac_thread]) 
 				
@@ -217,8 +230,8 @@ if __name__ == "__main__":
 	#subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', logo_path])
 	args_parser()
 
-	if rasp:
-		broker_address = broker_address_cluster
+	if xub:
+		broker_address = broker_address_xub
 		logging.debug("Set broker address in rasp mode: "+ broker_address)
 
 	map_root = opening_map('map.xml')

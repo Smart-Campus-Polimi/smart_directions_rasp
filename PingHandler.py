@@ -157,6 +157,7 @@ class PingThread(threading.Thread):
 
 			#TODO method
 
+			print self.stop_queue.qsize()
 			if not self.stop_queue.empty():
 				self.msg = self.stop_queue.get()
 				logging.info("A new message is received")
