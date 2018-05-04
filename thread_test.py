@@ -192,6 +192,19 @@ def stop_single_process(item):
 			print "delete thread ", t[1]
 			t[0].cancel()
 
+def create_user(my_item):
+	user = PingHandler.PingThread(my_item, map_root, sniffer_queue, stop_queue)
+	t_sniffer.append([user, mac_thread])
+				
+	logging.debug("Creating a new thread")
+	user.start()
+	#create timer
+	timer = threading.Timer(600.0, stop_timer, [mac_thread])
+	timer.start()
+	timer_sniffer.append([timer, mac_thread]) 
+				
+	proj_status = False
+
 #### MAIN ####
 if __name__ == "__main__":
 	logging.info("_____________________________")
@@ -235,19 +248,18 @@ if __name__ == "__main__":
 			if type(item).__name__ == "StartMsg":
 				logging.info("The type is START MSG")
 				logging.debug("Message content %s", item)
-				print "The type is START MSG"
-				user = PingHandler.PingThread(item, map_root, sniffer_queue, stop_queue)
 				mac_thread = item[0]
-				t_sniffer.append([user, mac_thread])
+				print "The type is START MSG with mac ", mac_thread 
 				
-				logging.debug("Creating a new thread")
-				user.start()
-				#create timer
-				timer = threading.Timer(600.0, stop_timer, [mac_thread])
-				timer.start()
-				timer_sniffer.append([timer, mac_thread]) 
-				
-				proj_status = False
+				if len(t_sniffer) > 0:
+					print t_sniffer
+					if not [s for s in t_sniffer if mac_thread in s[1]]:
+						create_user(item)
+					else:
+						print "user is already present"
+
+				else:
+					create_user(item)
 
 
 			elif type(item).__name__ == "StopMsg":

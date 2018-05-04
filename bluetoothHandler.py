@@ -77,8 +77,9 @@ def is_ping(line, mac_addr):
 
 #check if device is out of range
 def is_range(line, mac_addr):
-	if "Can't connect" in line:
-		logging.debug("cant connect %s", line)
+	if "Operation now" in line:
+		logging.warning("l2ping problem %s", line)
+		print "L2ping problem"
 		return False
 	if "Host is down" in line:
 		logging.debug("host is down %s", line)

@@ -143,7 +143,7 @@ class PingThread(threading.Thread):
 		self.direction, self.final = xml_parser.find_direction(self.root, self.place_id_target, thread_test.rasp_id)
 		logging.debug("parsing file. direcition: %s, is_final: %s", self.direction, self.final)
 		logging.info("starting bluetooth handler")
-		print "starting ping ... "
+		print "starting ping ... ", self.mac_target
 
 		self.bt = bluetoothHandler.bluetoothHandler()
 		self.bt.start(self.mac_target)
