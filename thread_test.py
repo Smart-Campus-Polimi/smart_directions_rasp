@@ -191,6 +191,8 @@ def stop_single_process(item):
 		if mac_target in t:
 			t[0].cancel()
 
+	print "proj statu", proj_status
+
 def stop_timer(mac_addr):
 	print "Stop timer"
 	logging.debug("Stop timer")
@@ -315,6 +317,7 @@ if __name__ == "__main__":
 			logging.debug("Reading proj queue msg: %s", proj_msg)
 
 			if type(proj_msg).__name__ == "ProjMsg":
+				print "proj msg"
 				logging.debug("The type is proj_msg")
 				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
 				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
