@@ -322,10 +322,13 @@ if __name__ == "__main__":
 				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
 				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
 				
+				
 				if is_in_list(mac_target):
+					print new_proj_status, proj_status
 					if not proj_status:# and not close_proj:
 						logging.debug("if the status if off (%s)", proj_status)
 						if new_proj_status:
+							print "stampa"
 							logging.debug("the new status is on (%s)", new_proj_status)
 							display_image(direction)
 							proj_status = new_proj_status
