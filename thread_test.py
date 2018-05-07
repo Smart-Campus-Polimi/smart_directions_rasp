@@ -145,7 +145,7 @@ def display_image(my_direction):
 
 		logging.info("Displaying image")
 		proj_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE, shell=False)
-		print "pid:", proj_proc
+		print "pid:", proj_proc.pid()
 
 def turn_off_screen():
 	#proj_status = False
