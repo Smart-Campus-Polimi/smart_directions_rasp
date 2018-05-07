@@ -123,7 +123,7 @@ def args_parser():
 			logging.debug("vervose mode enabled %s", opt)
 		elif opt in ('-f', '--fbi'):
 			fbi_opt = 0
-			logging.debug("fbi mode disabled %d", xub)
+			logging.debug("fbi mode disabled %d", fbi_opt)
 		else:
 			#usage()
 			logging.warning("some error in params ",params)
@@ -144,7 +144,8 @@ def display_image(my_direction):
 		
 
 		logging.info("Displaying image")
-		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE)
+		proj_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE, shell=False)
+		print "pid:", proj_proc
 
 def turn_off_screen():
 	#proj_status = False
