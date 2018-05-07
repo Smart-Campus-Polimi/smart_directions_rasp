@@ -148,7 +148,7 @@ def display_image(my_direction):
 		print "pid:", proj_proc.pid()
 
 def turn_off_screen():
-	#proj_status = False
+	proj_status = False
 	print "Turning off the screen"
 	logging.info("Turning off the screen")
 	logging.info("Killing fbi")
