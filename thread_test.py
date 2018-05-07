@@ -22,6 +22,8 @@ global t_sniffer
 t_sniffer = []
 global timer_sniffer
 timer_sniffer = []
+global stop_list
+stop_list = []
 global proj_status
 proj_status = False
 global close_proj
@@ -29,9 +31,9 @@ close_proj = True
 
 global sniffer_queue
 sniffer_queue = Queue.Queue()
-global stop_queue
-stop_queue = Queue.Queue()
-print stop_queue
+global colors
+colors = ['Green', 'Red', 'Blue', 'Black']
+
 
 
 StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
@@ -42,7 +44,7 @@ logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.INFO, format='
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
 
-broker_address = "192.168.1.74" 
+broker_address = "192.168.1.3" 
 broker_address_xub = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
 
@@ -56,7 +58,6 @@ def signal_handler(signal, frame):
 	print t_sniffer
 	
 	for user in t_sniffer:
-		print t_sniffer
 		logging.debug("closing thread %s", user[0])
 		user[0].stop()
 	logging.info("stopping all ping thread")
@@ -140,12 +141,7 @@ def display_image(my_direction):
 		logging.debug("Direction: %s", my_direction)
 		logging.debug("Image path: %s", arrow_path)
 	
-		logging.info("Killing fbi")
-		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
-
-		logging.info("Opening tvservice (turn on the screen)")
-		#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
-		subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
+		
 
 		logging.info("Displaying image")
 		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE)
@@ -176,20 +172,22 @@ def is_in_list(mac_addr):
 
 def stop_single_process(item):
 	mac_target, timestamp = item
-	print t_sniffer
 	logging.debug("Stop the process %s", mac_target)
 
 	if is_in_list(mac_target):
-		print "sending in queue stop"
-		print item
-		stop_queue.put(item)
+		correct_q = [q for q in stop_list if mac_target in q]
+		correct_q = correct_q[0][0]
+		correct_q.put(item)
 		proj_status = False
 		close_proj = True
 		turn_off_screen()
+		#restore color in list
+		color_dismissed = users_colors[mac_target]
+		colors.append(color_dismissed)
+		color_used.remove(color_dismissed)
 
 	for t in timer_sniffer:
 		if mac_target in t:
-			print "delete thread ", t[1]
 			t[0].cancel()
 
 def stop_timer(mac_addr):
@@ -197,24 +195,38 @@ def stop_timer(mac_addr):
 	logging.debug("Stop timer")
 
 	if is_in_list(mac_addr):
-		print mac_addr, "is in timer list"
 		#mqtt_pub_q.put(mac_addr)
 		stop_msg = StopMsg(mac_address=mac_addr, timestamp="10:21:21")
 		stop_single_process(stop_msg)
-	else: 
-		print mac_address, "not in list ", t_sniffer
+	
+def assign_color():
+	if len(colors)>0:
+		color_chosed = colors[0]
+		colors.remove(color_chosed)
+		color_used.append(color_chosed)
+		return color_chosed
+	else:
+		return "Purple"
 
 
-def create_user(my_item):
+
+def create_user(my_item, my_mac):
+	stop_queue = Queue.Queue()
+	stop_list.append([stop_queue, my_mac])
+
 	user = PingHandler.PingThread(my_item, map_root, sniffer_queue, stop_queue)
-	t_sniffer.append([user, mac_thread])
-				
+	users_colors[my_mac] = assign_color()
+
+	t_sniffer.append([user, my_mac, users_colors[my_mac]])
+	print t_sniffer		
+
 	logging.debug("Creating a new thread")
 	user.start()
+
 	#create timer
-	timer = threading.Timer(60.0, stop_timer, [mac_thread])
+	timer = threading.Timer(60.0, stop_timer, [my_mac])
 	timer.start()
-	timer_sniffer.append([timer, mac_thread]) 
+	timer_sniffer.append([timer, my_mac]) 
 				
 	proj_status = False
 
@@ -225,6 +237,14 @@ if __name__ == "__main__":
 	signal.signal(signal.SIGINT, signal_handler)
 	print "SM4RT_D1R3CT10Nz v0.3 thread", rasp_id
 	logging.info("Starting main...")
+	#setup display
+	logging.info("Killing fbi")
+	subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+
+	logging.info("Opening tvservice (turn on the screen)")
+	#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
+	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
+	
 	#subprocess.Popen(['tvservice', '-p'])
 	#logo_path = 'arrows/smart_dir_logo.png'
 	#subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', logo_path])
@@ -232,11 +252,17 @@ if __name__ == "__main__":
 
 	if xub:
 		broker_address = broker_address_xub
-		logging.debug("Set broker address in rasp mode: "+ broker_address)
+		logging.debug("Set broker address in xub mode: "+ broker_address)
 
 	map_root = opening_map('map.xml')
 	
 	logging.info("the broker_address is "+broker_address)
+
+	global users_colors
+	users_colors = {}
+	global color_used
+	color_used = []
+	
 
 	mqtt_sub_q = Queue.Queue()
 	mqtt_pub_q = Queue.Queue()
@@ -265,14 +291,13 @@ if __name__ == "__main__":
 				print "The type is START MSG with mac ", mac_thread 
 				
 				if len(t_sniffer) > 0:
-					print t_sniffer
 					if not [s for s in t_sniffer if mac_thread in s[1]]:
-						create_user(item)
+						create_user(item, mac_thread)
 					else:
 						print "user is already present"
 
 				else:
-					create_user(item)
+					create_user(item, mac_thread)
 
 
 			elif type(item).__name__ == "StopMsg":
