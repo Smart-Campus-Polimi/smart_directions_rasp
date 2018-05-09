@@ -9,8 +9,8 @@ from collections import namedtuple
 
 import thread_test
 
-BUF_SIZE = 10
-q = Queue.Queue(BUF_SIZE)	
+#BUF_SIZE = 10
+#q = Queue.Queue(BUF_SIZE)	
 
 StartMsg = namedtuple('StartMsg', ['mac_address', 'place_id', 'id', 'timestamp'])
 StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])

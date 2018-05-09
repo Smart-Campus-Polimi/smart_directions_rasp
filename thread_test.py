@@ -15,6 +15,7 @@ from collections import namedtuple
 #my imports
 import MqttHandler
 import PingHandler
+import ProjectorHandler
 
 
 ##### GLOBAL VARS ####
@@ -29,8 +30,11 @@ proj_status = False
 global close_proj
 close_proj = True
 
+#for each queue check if it is not full
+BUF_SIZE = 10
+
 global sniffer_queue
-sniffer_queue = Queue.Queue()
+sniffer_queue = Queue.Queue(BUF_SIZE)
 global colors
 colors = ['Green', 'Red', 'Blue', 'Black']
 
@@ -64,6 +68,9 @@ def signal_handler(signal, frame):
 	
 	t_mqtt.stop()
 	logging.info("Stopping mqtt thread")
+
+	t_proj.stop()
+	logging.info("Stopping projector thread")
 
 	#TODO try catch
 	try:
@@ -135,13 +142,12 @@ def args_parser():
 def display_image(my_direction):
 	arrow_path = "arrows/Green_arrow_"+my_direction+".png"
 
-	print "show image"
+	print "SHOW IMAGE"
 	if fbi_opt:
-		logging.info("Shows image")
+		logging.info("Show image")
 		logging.debug("Direction: %s", my_direction)
 		logging.debug("Image path: %s", arrow_path)
 	
-		
 
 		logging.info("Displaying image")
 		proj_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE, shell=False)
@@ -157,7 +163,7 @@ def turn_off_screen():
 	#subprocess.Popen(['tvservice', '-o'])
 	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 
-def opening_map(map_path):
+def open_map(map_path):
 	logging.info("Opening map")
 	tree = ET.parse(map_path)
 	root = tree.getroot()
@@ -176,8 +182,16 @@ def stop_single_process(item):
 	logging.debug("Stop the process %s", mac_target)
 
 	if is_in_list(mac_target):
+		print "stop process"
 		correct_q = [q for q in stop_list if mac_target in q]
+		
+		#remove old user
+		for usr in stop_list:
+			if mac_target in usr:
+				stop_list.remove(usr)
+		
 		correct_q = correct_q[0][0]
+
 		correct_q.put(item)
 		proj_status = False
 		close_proj = True
@@ -211,12 +225,17 @@ def assign_color():
 	else:
 		return "Purple"
 
-
+def user_color(my_mac):
+	for usr in t_sniffer:
+		if my_mac in usr:
+			return usr[2]
+			
+	return None
 
 def create_user(my_item, my_mac):
-	stop_queue = Queue.Queue()
+	stop_queue = Queue.Queue(BUF_SIZE)
 	stop_list.append([stop_queue, my_mac])
-
+	print "stop list", stop_list
 	user = PingHandler.PingThread(my_item, map_root, sniffer_queue, stop_queue)
 	users_colors[my_mac] = assign_color()
 
@@ -227,7 +246,7 @@ def create_user(my_item, my_mac):
 	user.start()
 
 	#create timer
-	timer = threading.Timer(60.0, stop_timer, [my_mac])
+	timer = threading.Timer(160.0, stop_timer, [my_mac])
 	timer.start()
 	timer_sniffer.append([timer, my_mac]) 
 				
@@ -257,7 +276,7 @@ if __name__ == "__main__":
 		broker_address = broker_address_xub
 		logging.debug("Set broker address in xub mode: "+ broker_address)
 
-	map_root = opening_map('map.xml')
+	map_root = open_map('map.xml')
 	
 	logging.info("the broker_address is "+broker_address)
 
@@ -265,20 +284,24 @@ if __name__ == "__main__":
 	users_colors = {}
 	global color_used
 	color_used = []
-	
 
-	mqtt_sub_q = Queue.Queue()
-	mqtt_pub_q = Queue.Queue()
+	projector_up = {}
+
+	projector_queue = Queue.Queue(BUF_SIZE)
+
+	mqtt_sub_q = Queue.Queue(BUF_SIZE)
+	mqtt_pub_q = Queue.Queue(BUF_SIZE)
 
 
 	t_mqtt = MqttHandler.MqttThread(mqtt_sub_q, mqtt_pub_q, broker_address)
+	t_proj = ProjectorHandler.ProjectorThread(projector_queue)
 	t_mqtt.setDaemon(True)
 	logging.info("Setting up the mqtt thread")
 
 
 	t_mqtt.start()
+	t_proj.start()
 	
-
 
 	while True: 
 		if not mqtt_sub_q.empty():
@@ -306,7 +329,7 @@ if __name__ == "__main__":
 			elif type(item).__name__ == "StopMsg":
 				logging.info("The type is STOP MSG")
 				logging.debug("Message content %s", item)
-				print "the type is STOP MESSAGE"
+				print "the type is STOP MESSAGE", item
 				
 				stop_single_process(item)
 				
@@ -323,30 +346,43 @@ if __name__ == "__main__":
 				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
 				
 				
+
 				if is_in_list(mac_target):
-					print new_proj_status, proj_status
-					if not proj_status:# and not close_proj:
-						logging.debug("if the status if off (%s)", proj_status)
-						if new_proj_status:
-							print "stampa"
-							logging.debug("the new status is on (%s)", new_proj_status)
-							display_image(direction)
-							proj_status = new_proj_status
-					elif proj_status:
-						logging.debug("if the status if on (%s)", proj_status)
-						if not new_proj_status:
-							logging.debug("the new status is OFF (%s)", new_proj_status)
-							proj_status = new_proj_status
-							turn_off_screen()
+					print "in list: ", new_proj_status
+					if new_proj_status:
+						if mac_target not in projector_up:
+							projector_up[mac_target] = [direction, user_color(mac_target)]
+							projector_queue.put(projector_up)
+
+					if not new_proj_status:
+						del projector_up[mac_target]
+						projector_queue.put(projector_up)
+					
+
+					#print projector_up
+					#if new_proj_status:
+					#	display_image(direction)
+					#if not proj_status:# and not close_proj:
+					#	logging.debug("if the status if off (%s)", proj_status)
+					#	if new_proj_status:
+					#		print "stampa"
+					#		logging.debug("the new status is on (%s)", new_proj_status)
+					#		display_image(direction)
+					#		proj_status = new_proj_status
+					#elif proj_status:
+					#	logging.debug("if the status if on (%s)", proj_status)
+					#	if not new_proj_status:
+					#		logging.debug("the new status is OFF (%s)", new_proj_status)
+					#		proj_status = new_proj_status
+					#		turn_off_screen()
 
 					if final_pos:
 						print "user is arrived to the final step, sending msg to the other sniffers"
 						logging.info("The user is in the final step")
-						time.sleep(15)
+						time.sleep(5)
 						logging.info("Sending msg to the others sniffers")
 						mqtt_pub_q.put(mac_target)
-						#turn_off_screen()
-						#proj_status = False
+
 						print t_sniffer
 
 		t_sniffer = [t for t in t_sniffer if t[0].is_alive()]

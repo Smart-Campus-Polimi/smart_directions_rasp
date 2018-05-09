@@ -156,6 +156,7 @@ class PingThread(threading.Thread):
 		while self.is_running:
 
 			#TODO method
+			#print "inside ping: ", self.stop_queue
 			if not self.stop_queue.empty():
 				self.msg = self.stop_queue.get()
 				print "stop msg", self.msg
