@@ -26,6 +26,7 @@ def kill_pid(pid):
         # to know that in a portable fashion.
         raise ValueError('invalid PID 0')
     try:
+    	print "killo ", pid
         os.kill(pid, 0)
     except OSError as err:
         if err.errno == errno.ESRCH:
