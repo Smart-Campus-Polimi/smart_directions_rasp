@@ -344,8 +344,6 @@ if __name__ == "__main__":
 				logging.debug("The type is proj_msg")
 				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
 				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
-				
-				
 
 				if is_in_list(mac_target):
 					print "in list: ", new_proj_status
