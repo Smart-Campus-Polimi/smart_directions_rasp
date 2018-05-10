@@ -60,12 +60,12 @@ def projector(my_indication,my_num):
 		print path
 		out_path = 'arrows/out/my_direction'+str(my_num)+'.png'
 		
-		print "killo tutto"
-		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
-		
 		subprocess.check_output(['montage', '-geometry', '1280x960+2+2', '-tile', str(count)+'x'+str(count)] + path + [out_path], stderr=subprocess.PIPE)
 		print "new montage"
-		kill_process()
+		print "killo tutto"
+		subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
+		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+		#kill_process()
 		fbi_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE, shell=False)
 		#print fbi_proc.pid
 		
