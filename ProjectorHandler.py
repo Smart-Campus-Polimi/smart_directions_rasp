@@ -41,6 +41,13 @@ def kill_pid(pid):
     else:
         return True
 
+def kill_process():
+	fbi_process = subprocess.check_output(['sh', 'check_process_running.sh', 'fbi'])
+	fbi_process = fbi_process.split()
+	for p in fbi_process:
+		print p
+		kill_pid(p)
+
 def projector(my_indication,my_num):
 	if my_indication:
 		count = 0
@@ -53,16 +60,13 @@ def projector(my_indication,my_num):
 		out_path = 'arrows/out/my_direction'+str(my_num)+'.png'
 		subprocess.check_output(['montage', '-geometry', '1280x960+2+2', '-tile', str(count)+'x'+str(count)] + path + [out_path], stderr=subprocess.PIPE)
 		print "new montage"
+		kill_process()
 		fbi_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE, shell=False)
 		#print fbi_proc.pid
 		
 	else:
 		try: 
-			fbi_process = subprocess.check_output(['sh', 'check_process_running.sh', 'fbi'])
-			fbi_process = fbi_process.split()
-			for p in fbi_process:
-				print p
-				kill_pid(p)
+			kill_process()
 
 			subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 		except subprocess.CalledProcessError as e:
