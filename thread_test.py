@@ -36,7 +36,7 @@ BUF_SIZE = 10
 global sniffer_queue
 sniffer_queue = Queue.Queue(BUF_SIZE)
 global colors
-colors = ['Green', 'Red', 'Blue', 'Black']
+colors = ['green', 'red', 'blue', 'black']
 
 
 
