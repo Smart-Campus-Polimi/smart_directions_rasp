@@ -46,7 +46,7 @@ def kill_process():
 	fbi_process = fbi_process.split()
 	for p in fbi_process:
 		print p
-		kill_pid(p)
+		kill_pid(int(p))
 
 def projector(my_indication,my_num):
 	if my_indication:
