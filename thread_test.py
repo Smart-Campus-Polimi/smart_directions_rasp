@@ -100,7 +100,7 @@ def signal_handler(signal, frame):
 
 def args_parser():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'fhxv', ['help', 'fbi=','xub=', 'verbose='])
+		opts, args = getopt.getopt(sys.argv[1:], 'bfhxv', ['broker=', 'help', 'fbi=','xub=', 'verbose='])
 		logging.debug("Input params %s", opts)
 	except getopt.GetoptError as err:
 		print str(err)
@@ -125,6 +125,10 @@ def args_parser():
 		elif opt in ('-x', '--xub'):
 			xub = 1
 			logging.debug("xub mode enabled %d", xub)
+		elif opt in ('-b', '--broker'):
+			global broker_address
+			broker_address=arg
+			logging.debug("host set to %s", broker_address)
 		elif opt in ('-v', '--verbose'):
 			logging.getLogger().setLevel(logging.DEBUG)
 			logging.debug("vervose mode enabled %s", opt)
