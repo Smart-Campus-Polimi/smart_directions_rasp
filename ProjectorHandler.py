@@ -63,9 +63,10 @@ def projector(my_indication,my_num):
 		subprocess.check_output(['montage', '-geometry', '1280x960+2+2', '-tile', str(count)+'x'+str(count)] + path + [out_path], stderr=subprocess.PIPE)
 		print "new montage"
 		print "killo tutto"
-		subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
+		#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
 		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 		#kill_process()
+		print "proietto"
 		fbi_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE, shell=False)
 		#print fbi_proc.pid
 		
@@ -75,7 +76,7 @@ def projector(my_indication,my_num):
 			subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 			kill_process()
 
-			subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
+			#subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 		except subprocess.CalledProcessError as e:
 			pass
 		#turn off screen
