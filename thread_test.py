@@ -183,19 +183,23 @@ def stop_single_process(item):
 
 	if is_in_list(mac_target):
 		print "stop process"
-		correct_q = [q for q in stop_list if mac_target in q]
+		stop_q = [q for q in stop_list if mac_target in q]
 		
 		#remove old user
 		for usr in stop_list:
 			if mac_target in usr:
 				stop_list.remove(usr)
 		
-		correct_q = correct_q[0][0]
+		stop_q = stop_q[0][0]
 
-		correct_q.put(item)
-		proj_status = False
-		close_proj = True
-		turn_off_screen()
+		stop_q.put(item)
+
+		#delete user from list and send to projector thread
+		del projector_up[mac_target]
+		projector_queue.put(projector_up)
+		#proj_status = False
+		#close_proj = True
+		#turn_off_screen()
 		#restore color in list
 		color_dismissed = users_colors[mac_target]
 		colors.append(color_dismissed)
@@ -285,8 +289,10 @@ if __name__ == "__main__":
 	global color_used
 	color_used = []
 
+	global projector_up
 	projector_up = {}
 
+	global projector_queue
 	projector_queue = Queue.Queue(BUF_SIZE)
 
 	mqtt_sub_q = Queue.Queue(BUF_SIZE)
