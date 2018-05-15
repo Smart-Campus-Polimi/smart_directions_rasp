@@ -64,8 +64,8 @@ def projector(my_indication,my_num):
 		print "new montage"
 		print "killo tutto"
 		#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
-		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
-		#kill_process()
+		#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+		kill_process()
 		print "proietto, new path: ", out_path
 		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path, '>>', '/home/pi/smart_directions_rasp/debug_p.txt'], stderr=subprocess.PIPE)
 		#print fbi_proc.pid
