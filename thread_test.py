@@ -387,7 +387,7 @@ if __name__ == "__main__":
 					if final_pos:
 						print "user is arrived to the final step, sending msg to the other sniffers"
 						logging.info("The user is in the final step")
-						time.sleep(5)
+						time.sleep(15)
 						logging.info("Sending msg to the others sniffers")
 						mqtt_pub_q.put(mac_target)
 
