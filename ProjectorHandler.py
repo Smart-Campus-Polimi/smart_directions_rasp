@@ -57,7 +57,7 @@ def projector(my_indication,my_num):
 			count += count
 			path.append("arrows/"+value[1]+"/"+value[0]+".png")
 
-		print path
+		print "old path: ", path
 		out_path = 'arrows/out/my_direction'+str(my_num)+'.png'
 		
 		subprocess.check_output(['montage', '-geometry', '1280x960+2+2', '-tile', str(count)+'x'+str(count)] + path + [out_path], stderr=subprocess.PIPE)
@@ -66,7 +66,7 @@ def projector(my_indication,my_num):
 		#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
 		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 		#kill_process()
-		print "proietto"
+		print "proietto, new path: ", out_path
 		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path, '>>', '/home/pi/smart_directions_rasp/debug_p.txt'], stderr=subprocess.PIPE)
 		#print fbi_proc.pid
 		
@@ -100,7 +100,6 @@ class ProjectorThread(threading.Thread):
 			if not self.queue.empty():
 				visual = self.queue.get()
 				new_img = True
-				print visual
 
 			if new_img:
 				num = num+1
