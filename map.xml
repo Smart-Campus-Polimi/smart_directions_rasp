@@ -15,7 +15,7 @@
 	 	<name>Ufficio Cesana</name>
 	 	<location>3rd floor</location>
 	 	<directions>
-	 		<rasp id="A" final="False">straight</rasp>
+	 		<rasp id="A" final="False">up</rasp>
 	 		<rasp id="B" final="False">sx</rasp>
 	 		<rasp id="C" final="False">dx</rasp>
 	 		<rasp id="D" final="True">sx</rasp>
@@ -27,10 +27,10 @@
 	 	<name>Ufficio Capone</name>
 	 	<location>3rd floor</location>
 	 	<directions>
-	 		<rasp id="A" final="False">straight</rasp>
+	 		<rasp id="A" final="False">up</rasp>
 	 		<rasp id="B" final="False">sx</rasp>
 	 		<rasp id="C" final="False">dx</rasp>
-	 		<rasp id="D" final="True">straight</rasp>
+	 		<rasp id="D" final="True">up</rasp>
 	 	</directions>
 	 </place>
 </map>
