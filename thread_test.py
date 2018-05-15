@@ -213,7 +213,6 @@ def stop_single_process(item):
 		if mac_target in t:
 			t[0].cancel()
 
-	print "proj statu", proj_status
 
 def stop_timer(mac_addr):
 	print "Stop timer"
@@ -243,7 +242,7 @@ def user_color(my_mac):
 def create_user(my_item, my_mac):
 	stop_queue = Queue.Queue(BUF_SIZE)
 	stop_list.append([stop_queue, my_mac])
-	print "stop list", stop_list
+	
 	user = PingHandler.PingThread(my_item, map_root, sniffer_queue, stop_queue)
 	users_colors[my_mac] = assign_color()
 
@@ -350,13 +349,12 @@ if __name__ == "__main__":
 			logging.debug("Reading proj queue msg: %s", proj_msg)
 
 			if type(proj_msg).__name__ == "ProjMsg":
-				print "proj msg"
 				logging.debug("The type is proj_msg")
 				mac_target, direction, new_proj_status, final_pos, timestamp = proj_msg
 				logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
 
 				if is_in_list(mac_target):
-					print "in list: ", new_proj_status
+					
 					if new_proj_status:
 						if mac_target not in projector_up:
 							projector_up[mac_target] = [direction, user_color(mac_target)]
