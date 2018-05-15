@@ -200,12 +200,11 @@ def stop_single_process(item):
 
 		stop_q.put(item)
 
-		#delete user from list and send to projector thread
-		del projector_up[mac_target]
-		projector_queue.put(projector_up)
-		#proj_status = False
-		#close_proj = True
-		#turn_off_screen()
+		if mac_target in projector_up:
+			#delete user from list and send to projector thread
+			del projector_up[mac_target]
+			projector_queue.put(projector_up)
+		
 		#restore color in list
 		color_dismissed = users_colors[mac_target]
 		colors.append(color_dismissed)
