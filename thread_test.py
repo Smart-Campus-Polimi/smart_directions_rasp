@@ -72,6 +72,8 @@ def signal_handler(signal, frame):
 	t_proj.stop()
 	logging.info("Stopping projector thread")
 
+	
+	ProjectorHandler.kill_process()
 	#TODO try catch
 	try:
 		killall_fbi = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
