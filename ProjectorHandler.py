@@ -67,7 +67,7 @@ def projector(my_indication,my_num):
 		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 		#kill_process()
 		print "proietto"
-		fbi_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path, '>>', 'debug_p.txt'], stderr=subprocess.PIPE, shell=False)
+		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path, '>>', '/home/pi/smart_directions_rasp/debug_p.txt'], stderr=subprocess.PIPE)
 		#print fbi_proc.pid
 		
 	else:
