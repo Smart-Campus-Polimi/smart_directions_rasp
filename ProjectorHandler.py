@@ -62,8 +62,8 @@ def projector(my_indication,my_num):
 
 		kill_process()
 		print "project, new path: ", out_path
-		if thread_test.fbi_opt:
-			subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE)
+		
+		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE)
 
 		
 	else:

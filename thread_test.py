@@ -29,6 +29,8 @@ global proj_status
 proj_status = False
 global close_proj
 close_proj = True
+global fbi_opt
+fbi_opt = True
 
 #for each queue check if it is not full
 BUF_SIZE = 10
@@ -115,8 +117,6 @@ def args_parser():
 		sys.exit(2)
 
 	global xub
-	global fbi_opt
-	fbi_opt = True
 	xub = 0
 
 	for opt, arg in opts:
@@ -137,6 +137,7 @@ def args_parser():
 			logging.getLogger().setLevel(logging.DEBUG)
 			logging.debug("vervose mode enabled %s", opt)
 		elif opt in ('-f', '--fbi'):
+			global fbi_opt
 			fbi_opt = False
 			logging.debug("fbi mode disabled %d", fbi_opt)
 		else:
