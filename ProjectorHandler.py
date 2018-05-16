@@ -71,6 +71,7 @@ def projector(my_indication,my_num):
 			print "killall"
 			subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 			kill_process()
+			subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 
 		except subprocess.CalledProcessError as e:
 			pass

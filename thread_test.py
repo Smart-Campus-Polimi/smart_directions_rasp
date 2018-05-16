@@ -83,9 +83,6 @@ def signal_handler(signal, frame):
 		logging.warning(e)
 		logging.warning("No fbi process")
 	
-	logging.info("Reopen display")
-	subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
-	
 	try:
 		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
 		logging.debug("Closing l2ping process %s", killall_ping)
@@ -100,6 +97,8 @@ def signal_handler(signal, frame):
 	for t in timer_sniffer:
 		t[0].cancel()
 
+	logging.info("Reopen display")
+	subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
 
 	logging.info("Closing the program")
 	sys.exit(0)
@@ -276,8 +275,8 @@ if __name__ == "__main__":
 	logging.debug("Killing fbi")
 	subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 
-	logging.debug("Opening chvt 9-7 (turn on the screen)")
-	subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
+	logging.debug("Opening chvt 9 (black screen)")
+	subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 	
 	args_parser()
 
