@@ -26,7 +26,7 @@ def kill_pid(pid):
         # to know that in a portable fashion.
         raise ValueError('invalid PID 0')
     try:
-    	print "killo ", pid
+    	print "kill ", pid
         os.kill(pid, 9)
     except OSError as err:
         if err.errno == errno.ESRCH:
@@ -46,7 +46,6 @@ def kill_process():
 	fbi_process = subprocess.check_output(['sh', 'check_process_running.sh', 'fbi'])
 	fbi_process = fbi_process.split()
 	for p in fbi_process:
-		print p
 		kill_pid(int(p))
 
 def projector(my_indication,my_num):
@@ -57,33 +56,24 @@ def projector(my_indication,my_num):
 			count += count
 			path.append("arrows/"+value[1]+"/"+value[0]+".png")
 
-		print "old path: ", path
 		out_path = 'arrows/out/my_direction'+str(my_num)+'.png'
 		
 		subprocess.check_output(['montage', '-geometry', '1280x960+2+2', '-tile', str(count)+'x'+str(count)] + path + [out_path], stderr=subprocess.PIPE)
-		print "new montage"
-		print "killo tutto"
-		#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
-		#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+
 		kill_process()
-		print "proietto, new path: ", out_path
-		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path, '>>', '/home/pi/smart_directions_rasp/debug_p.txt'], stderr=subprocess.PIPE)
-		#print fbi_proc.pid
+		print "project, new path: ", out_path
+		if thread_test.fbi_opt:
+			subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE)
+
 		
 	else:
 		try: 
-			print "killo tutto"
+			print "killall"
 			subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 			kill_process()
 
-			#subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 		except subprocess.CalledProcessError as e:
 			pass
-		#turn off screen
-		#print "turn off screen"
-		#subprocess.Popen(['killall', 'fbi'])
-		#display desktop
-		#subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 
 class ProjectorThread(threading.Thread):
 	def __init__(self, queue):
@@ -109,5 +99,7 @@ class ProjectorThread(threading.Thread):
 
 
 	def stop(self):
-		self.is_running = False
 		#close proj processes
+		kill_process()
+		self.is_running = False
+			

@@ -62,18 +62,17 @@ def signal_handler(signal, frame):
 	print t_sniffer
 	
 	for user in t_sniffer:
-		logging.debug("closing thread %s", user[0])
+		logging.debug("close thread %s", user[0])
 		user[0].stop()
-	logging.info("stopping all ping thread")
+	logging.info("Stop all ping thread")
 	
 	t_mqtt.stop()
-	logging.info("Stopping mqtt thread")
+	logging.info("Stop mqtt thread")
 
 	t_proj.stop()
-	logging.info("Stopping projector thread")
+	logging.info("Stop projector thread")
 
 	
-	ProjectorHandler.kill_process()
 	#TODO try catch
 	try:
 		killall_fbi = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
@@ -82,7 +81,8 @@ def signal_handler(signal, frame):
 		logging.warning(e)
 		logging.warning("No fbi process")
 	
-	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
+	logging.info("Reopen display")
+	subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
 	
 	try:
 		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
@@ -91,13 +91,15 @@ def signal_handler(signal, frame):
 		logging.warning(e)
 		logging.warning("No l2ping process")
 
-	logging.info("Closing the program")
+	
 
-
+	logging.info("Closing the timer")
 	#close timer
 	for t in timer_sniffer:
 		t[0].cancel()
 
+
+	logging.info("Closing the program")
 	sys.exit(0)
 
 def args_parser():
@@ -114,7 +116,7 @@ def args_parser():
 
 	global xub
 	global fbi_opt
-	fbi_opt = 1
+	fbi_opt = True
 	xub = 0
 
 	for opt, arg in opts:
@@ -130,12 +132,12 @@ def args_parser():
 		elif opt in ('-b', '--broker'):
 			global broker_address
 			broker_address=arg
-			logging.debug("host set to %s", broker_address)
+			logging.debug("mqttt broker set to %s", broker_address)
 		elif opt in ('-v', '--verbose'):
 			logging.getLogger().setLevel(logging.DEBUG)
 			logging.debug("vervose mode enabled %s", opt)
 		elif opt in ('-f', '--fbi'):
-			fbi_opt = 0
+			fbi_opt = False
 			logging.debug("fbi mode disabled %d", fbi_opt)
 		else:
 			#usage()
@@ -144,7 +146,7 @@ def args_parser():
 			logging.info("exit program")
 			sys.exit(2)
 
-
+#not used anymore
 def display_image(my_direction):
 	arrow_path = "arrows/Green_arrow_"+my_direction+".png"
 
@@ -159,6 +161,7 @@ def display_image(my_direction):
 		proj_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE, shell=False)
 		print "pid:", proj_proc.pid
 
+#not used anymore
 def turn_off_screen():
 	proj_status = False
 	print "Turning off the screen"
@@ -185,15 +188,16 @@ def is_in_list(mac_addr):
 
 def stop_single_process(item):
 	mac_target, timestamp = item
-	logging.debug("Stop the process %s", mac_target)
-
+	
 	if is_in_list(mac_target):
-		print "stop process"
+		print "stop the process ", mac_target
+		logging.info("Stop the process %s", mac_target)
 		stop_q = [q for q in stop_list if mac_target in q]
 		
 		#remove old user
 		for usr in stop_list:
 			if mac_target in usr:
+				logging.info("Remove user %s", usr)
 				stop_list.remove(usr)
 		
 		stop_q = stop_q[0][0]
@@ -202,6 +206,7 @@ def stop_single_process(item):
 
 		if mac_target in projector_up:
 			#delete user from list and send to projector thread
+			logging.info("Delete projector usr %s", mac_target)
 			del projector_up[mac_target]
 			projector_queue.put(projector_up)
 		
@@ -209,6 +214,7 @@ def stop_single_process(item):
 		color_dismissed = users_colors[mac_target]
 		colors.append(color_dismissed)
 		color_used.remove(color_dismissed)
+		logging.info("Restore color %s", color_dismissed)
 
 	for t in timer_sniffer:
 		if mac_target in t:
@@ -216,13 +222,13 @@ def stop_single_process(item):
 
 
 def stop_timer(mac_addr):
-	print "Stop timer"
-	logging.debug("Stop timer")
+	print "Stop timer ", mac_addr
+	logging.info("Stop timer %s", mac_addr)
 
 	if is_in_list(mac_addr):
-		#mqtt_pub_q.put(mac_addr)
 		stop_msg = StopMsg(mac_address=mac_addr, timestamp="10:21:21")
 		stop_single_process(stop_msg)
+		logging.debug("Send stop msg in queue")
 	
 def assign_color():
 	if len(colors)>0:
@@ -248,7 +254,6 @@ def create_user(my_item, my_mac):
 	users_colors[my_mac] = assign_color()
 
 	t_sniffer.append([user, my_mac, users_colors[my_mac]])
-	print t_sniffer		
 
 	logging.debug("Creating a new thread")
 	user.start()
@@ -256,10 +261,9 @@ def create_user(my_item, my_mac):
 	#create timer
 	timer = threading.Timer(160.0, stop_timer, [my_mac])
 	timer.start()
-	timer_sniffer.append([timer, my_mac]) 
+	timer_sniffer.append([timer, my_mac])
+	logging.info("New user %s!", my_mac) 
 				
-	proj_status = False
-
 #### MAIN ####
 if __name__ == "__main__":
 	logging.info("_____________________________")
@@ -268,16 +272,12 @@ if __name__ == "__main__":
 	print "SM4RT_D1R3CT10Nz v0.3 thread", rasp_id
 	logging.info("Starting main...")
 	#setup display
-	logging.info("Killing fbi")
+	logging.debug("Killing fbi")
 	subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 
-	logging.info("Opening tvservice (turn on the screen)")
-	#subprocess.Popen(['tvservice', '-p'], stderr=subprocess.PIPE)
-	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
+	logging.debug("Opening chvt 9-7 (turn on the screen)")
+	subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
 	
-	#subprocess.Popen(['tvservice', '-p'])
-	#logo_path = 'arrows/smart_dir_logo.png'
-	#subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', logo_path])
 	args_parser()
 
 	if xub:
@@ -288,6 +288,7 @@ if __name__ == "__main__":
 	
 	logging.info("the broker_address is "+broker_address)
 
+	#GLOBAL VARS
 	global users_colors
 	users_colors = {}
 	global color_used
@@ -306,8 +307,7 @@ if __name__ == "__main__":
 	t_mqtt = MqttHandler.MqttThread(mqtt_sub_q, mqtt_pub_q, broker_address)
 	t_proj = ProjectorHandler.ProjectorThread(projector_queue)
 	t_mqtt.setDaemon(True)
-	logging.info("Setting up the mqtt thread")
-
+	t_proj.setDaemon(True)
 
 	t_mqtt.start()
 	t_proj.start()
@@ -330,16 +330,15 @@ if __name__ == "__main__":
 					if not [s for s in t_sniffer if mac_thread in s[1]]:
 						create_user(item, mac_thread)
 					else:
-						print "user is already present"
+						logging.debug("user %s is already present", mac_thread)
 
 				else:
 					create_user(item, mac_thread)
 
 
 			elif type(item).__name__ == "StopMsg":
-				logging.info("The type is STOP MSG")
-				logging.debug("Message content %s", item)
-				print "the type is STOP MESSAGE", item
+				logging.info("The type is STOP MSG %s", item)
+				print "STOP MESSAGE", item
 				
 				stop_single_process(item)
 				
@@ -357,40 +356,23 @@ if __name__ == "__main__":
 				if is_in_list(mac_target):
 					
 					if new_proj_status:
+						logging.info("New image")
 						if mac_target not in projector_up:
 							projector_up[mac_target] = [direction, user_color(mac_target)]
 							projector_queue.put(projector_up)
 
 					if not new_proj_status:
+						logging.info("Remove an image")
 						del projector_up[mac_target]
 						projector_queue.put(projector_up)
 					
 
-					#print projector_up
-					#if new_proj_status:
-					#	display_image(direction)
-					#if not proj_status:# and not close_proj:
-					#	logging.debug("if the status if off (%s)", proj_status)
-					#	if new_proj_status:
-					#		print "stampa"
-					#		logging.debug("the new status is on (%s)", new_proj_status)
-					#		display_image(direction)
-					#		proj_status = new_proj_status
-					#elif proj_status:
-					#	logging.debug("if the status if on (%s)", proj_status)
-					#	if not new_proj_status:
-					#		logging.debug("the new status is OFF (%s)", new_proj_status)
-					#		proj_status = new_proj_status
-					#		turn_off_screen()
-
 					if final_pos:
-						print "user is arrived to the final step, sending msg to the other sniffers"
+						print "The user is arrived to the final step, sending msg to the other sniffers..."
 						logging.info("The user is in the final step")
 						time.sleep(15)
 						logging.info("Sending msg to the others sniffers")
 						mqtt_pub_q.put(mac_target)
-
-						print t_sniffer
 
 		t_sniffer = [t for t in t_sniffer if t[0].is_alive()]
 
