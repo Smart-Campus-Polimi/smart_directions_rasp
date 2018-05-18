@@ -48,7 +48,7 @@ def kill_process():
 	for p in fbi_process:
 		kill_pid(int(p))
 
-def projector(my_indication,my_num):
+def projector(my_indication,my_num, vis_active):
 	if my_indication:
 		count = 0
 		path = []
@@ -63,7 +63,9 @@ def projector(my_indication,my_num):
 		kill_process()
 		print "project, new path: ", out_path
 		
-		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE)
+		if vis_active:
+			print "proj", thread_test.fbi_opt
+			subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE)
 
 		
 	else:
@@ -71,15 +73,18 @@ def projector(my_indication,my_num):
 			print "killall"
 			subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 			kill_process()
-			subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
+			if vis_active:
+				print "proj", thread_test.fbi_opt
+				subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 
 		except subprocess.CalledProcessError as e:
 			pass
 
 class ProjectorThread(threading.Thread):
-	def __init__(self, queue):
+	def __init__(self, queue, proj_active):
 		threading.Thread.__init__(self)
 		self.queue = queue
+		self.proj_active = proj_active
 
 
 	def run(self):
@@ -94,7 +99,7 @@ class ProjectorThread(threading.Thread):
 
 			if new_img:
 				num = num+1
-				projector(visual,num)
+				projector(visual,num, self.proj_active)
 				new_img = False
 
 

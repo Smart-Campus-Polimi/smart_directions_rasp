@@ -7,15 +7,15 @@ import subprocess
 import xml_parser
 import thread_test
 import csv
+from datetime import datetime
 from collections import namedtuple
 
 
 AVG_RATE = 20
-filename_csv = 'test.csv'
+pwd = subprocess.check_output(['pwd']).rstrip() + "/"
 
 ProjMsg = namedtuple('ProjMsg', ['mac_address', 'direction', 'proj_status', 'final_pos', 'timestamp'])
 
-f = open(filename_csv, 'w')
 
 def average_rssi(rssi, count, sum_rssi):
 		sum_rssi += rssi
@@ -68,7 +68,7 @@ def user_out_of_range(self):
 				
 def turn_off_projector(self):
 	self.print_dir = False
-	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp="10:12:12")
+	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp=datetime.now())
 	
 	logging.debug("Projector msg: %s", p_msg)
 	logging.info("Putting in queue the proj_msg")
@@ -78,7 +78,7 @@ def turn_off_projector(self):
 
 def turn_on_projector(self, direct):
 	self.print_dir = True
-	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp="10:12:12")
+	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp=datetime.now())
 	
 	logging.debug("Direction: ARROW %s", direct)
 	logging.debug("Projector msg: %s", p_msg)
@@ -114,27 +114,38 @@ def user_in_range(self):
 
 
 def user_arrived(self):
-	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=self.final, timestamp="10:12:12")
+	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=self.final, timestamp=datetime.now())
 	self.queue.put(p_msg)
 
 	logging.info("Putting in queue the proj_msg with final purpose")
 	logging.debug("Projector msg: %s", p_msg)
 
-def create_csv(file, rssi, ping):
-	file.write("\n"+str(rssi)+","+str(ping))	
+def create_csv(file, mac_addr, rssi, ping, ts):
+	file.write("\n"+str(mac_addr)+","+str(rssi)+","+str(ping)+","+str(ts))	
 
 
 class PingThread(threading.Thread):
 	def __init__(self, user, root, queue, stop_queue):
 		threading.Thread.__init__(self)
+		print self
 		self.user = user
 		self.root = root
 		self.queue = queue
 		self.stop_queue = stop_queue
-		self.f = open(str(self)[19]+filename_csv, 'w')
-		self.f.write("\"rssi\",\"ping\"")
+		filename_csv = thread_test.ping_csv_path
+		self.thread_number = str(self)[19:21]
+
+		try:
+			int(self.thread_number[1])
+		except ValueError:
+			self.thread_number=self.thread_number[0]
+			
+		self.f = open(filename_csv +"/thread_"+ self.thread_number +".csv", 'w')
+		self.f.write("\"mac_address\",\"rssi\",\"ping\",\"timestamp\"")
 
 	def run(self):
+		
+
 		self.mac_target, self.place_id_target, __, self.timestamp_target = self.user
 		
 		logging.debug("Thread %s is running", self)
@@ -182,7 +193,7 @@ class PingThread(threading.Thread):
 						self.rssi = float(self.rssi)
 						self.rssi_avg, self.count, self.sum_rssi = average_rssi(self.rssi, self.count, self.sum_rssi)
 						self.oor_count = 0
-						create_csv(self.f, self.rssi, self.ping)
+						create_csv(self.f, self.mac_target, self.rssi, self.ping, datetime.now())
 						#logging.debug("puntual rssi: %s", rssi)
 					except ValueError as e:
 						logging.error("Rssi concersion error %s", e)
@@ -197,6 +208,6 @@ class PingThread(threading.Thread):
 		logging.info("Closing the thread")
 		self.is_running = False
 		self.bt.stop_proc()
-		f.close()
+		self.f.close()
 
 	

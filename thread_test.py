@@ -9,9 +9,12 @@ import getopt
 import Queue
 import subprocess
 import logging
+import os
 import xml.etree.ElementTree as ET
 import pprint as pp
 from collections import namedtuple
+from datetime import datetime
+from time import strftime, localtime
 #my imports
 import MqttHandler
 import PingHandler
@@ -31,6 +34,8 @@ global close_proj
 close_proj = True
 global fbi_opt
 fbi_opt = True
+global xub
+xub = 0
 
 #for each queue check if it is not full
 BUF_SIZE = 10
@@ -40,10 +45,23 @@ sniffer_queue = Queue.Queue(BUF_SIZE)
 global colors
 colors = ['green', 'red', 'blue', 'black']
 
+def make_sure_path_exists(path):
+	if not os.path.exists(path):
+		os.makedirs(path)
 
+starting_time = strftime("%H%M%S", localtime())
+starting_day = strftime("%d%m%y", localtime())
 
-StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
 pwd = subprocess.check_output(['pwd']).rstrip() + "/"
+if "smart_directions_rasp" not in pwd:
+	pwd = pwd + "smart_directions_rasp/"
+
+ping_csv_path = pwd+"data/"+starting_day+"/"+starting_time+"/ping_rssi"
+session_csv_path = pwd+"data/"+starting_day+"/session_"+starting_time+".csv"
+
+make_sure_path_exists(ping_csv_path)
+#make_sure_path_exists(session_csv_path)
+
 rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
 logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -53,6 +71,9 @@ logging.debug("directory: "+ pwd)
 broker_address = "192.168.1.3" 
 broker_address_xub = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
+
+StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
+
 
 
 def signal_handler(signal, frame):
@@ -97,8 +118,9 @@ def signal_handler(signal, frame):
 	for t in timer_sniffer:
 		t[0].cancel()
 
-	logging.info("Reopen display")
-	subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
+	if fbi_opt:
+		logging.info("Reopen display")
+		subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
 
 	logging.info("Closing the program")
 	sys.exit(0)
@@ -115,9 +137,6 @@ def args_parser():
 		logging.warning("exit program")
 		sys.exit(2)
 
-	global xub
-	xub = 0
-
 	for opt, arg in opts:
 		if opt in ('-h', '--help'):
 			logging.debug("help")
@@ -126,7 +145,7 @@ def args_parser():
 			logging.info("exit program")
 			sys.exit(2)
 		elif opt in ('-x', '--xub'):
-			xub = 1
+			#xub = 1
 			logging.debug("xub mode enabled %d", xub)
 		elif opt in ('-b', '--broker'):
 			global broker_address
@@ -145,6 +164,8 @@ def args_parser():
 			print "Exit.. TODO how to use"
 			logging.info("exit program")
 			sys.exit(2)
+
+	return broker_address, " ", fbi_opt
 
 #not used anymore
 def display_image(my_direction):
@@ -221,12 +242,12 @@ def stop_single_process(item):
 			t[0].cancel()
 
 
-def stop_timer(mac_addr):
+def stop_timer(mac_addr, ts):
 	print "Stop timer ", mac_addr
 	logging.info("Stop timer %s", mac_addr)
 
 	if is_in_list(mac_addr):
-		stop_msg = StopMsg(mac_address=mac_addr, timestamp="10:21:21")
+		stop_msg = StopMsg(mac_address=mac_addr, timestamp=ts)
 		stop_single_process(stop_msg)
 		logging.debug("Send stop msg in queue")
 	
@@ -255,15 +276,18 @@ def create_user(my_item, my_mac):
 
 	t_sniffer.append([user, my_mac, users_colors[my_mac]])
 
+	
+
 	logging.debug("Creating a new thread")
 	user.start()
 
 	#create timer
-	timer = threading.Timer(160.0, stop_timer, [my_mac])
+	timer = threading.Timer(60.0, stop_timer, [my_mac, datetime.now()])
 	timer.start()
 	timer_sniffer.append([timer, my_mac])
 	logging.info("New user %s!", my_mac) 
 				
+
 #### MAIN ####
 if __name__ == "__main__":
 	logging.info("_____________________________")
@@ -276,9 +300,11 @@ if __name__ == "__main__":
 	subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 
 	logging.debug("Opening chvt 9 (black screen)")
-	subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 	
 	args_parser()
+
+	if fbi_opt:
+		subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 
 	if xub:
 		broker_address = broker_address_xub
@@ -305,13 +331,18 @@ if __name__ == "__main__":
 
 
 	t_mqtt = MqttHandler.MqttThread(mqtt_sub_q, mqtt_pub_q, broker_address)
-	t_proj = ProjectorHandler.ProjectorThread(projector_queue)
+	t_proj = ProjectorHandler.ProjectorThread(projector_queue, fbi_opt)
 	t_mqtt.setDaemon(True)
 	t_proj.setDaemon(True)
 
 	t_mqtt.start()
 	t_proj.start()
 	
+	f = open(session_csv_path, 'w')
+	f.write("\"id\",\"mac_address\",\"ts_arrive\",\"ts_dep\"")
+	f.close()
+
+	timetable = {}
 
 	while True: 
 		if not mqtt_sub_q.empty():
@@ -356,6 +387,7 @@ if __name__ == "__main__":
 				if is_in_list(mac_target):
 					
 					if new_proj_status:
+
 						logging.info("New image")
 						if mac_target not in projector_up:
 							projector_up[mac_target] = [direction, user_color(mac_target)]
