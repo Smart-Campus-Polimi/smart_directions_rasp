@@ -68,7 +68,7 @@ logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.INFO, format='
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
 
-broker_address = "192.168.1.3" 
+broker_address = "10.172.0.11" 
 broker_address_xub = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
 
@@ -166,32 +166,6 @@ def args_parser():
 			sys.exit(2)
 
 	return broker_address, " ", fbi_opt
-
-#not used anymore
-def display_image(my_direction):
-	arrow_path = "arrows/Green_arrow_"+my_direction+".png"
-
-	print "SHOW IMAGE"
-	if fbi_opt:
-		logging.info("Show image")
-		logging.debug("Direction: %s", my_direction)
-		logging.debug("Image path: %s", arrow_path)
-	
-
-		logging.info("Displaying image")
-		proj_proc = subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', arrow_path], stderr=subprocess.PIPE, shell=False)
-		print "pid:", proj_proc.pid
-
-#not used anymore
-def turn_off_screen():
-	proj_status = False
-	print "Turning off the screen"
-	logging.info("Turning off the screen")
-	logging.info("Killing fbi")
-	subprocess.Popen(['killall', 'fbi'])
-	logging.info("Closing tvservice (turn off the screen)")
-	#subprocess.Popen(['tvservice', '-o'])
-	subprocess.Popen(['xset', 'dpms', 'force', 'on'], stderr=subprocess.PIPE)
 
 def open_map(map_path):
 	logging.info("Opening map")
