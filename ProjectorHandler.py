@@ -64,17 +64,17 @@ def projector(my_indication,my_num, vis_active):
 		print "project, new path: ", out_path
 		
 		if vis_active:
-			print "proj", thread_test.fbi_opt
+			#print "proj", thread_test.fbi_opt
 			subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', out_path], stderr=subprocess.PIPE)
 
 		
 	else:
 		try: 
 			print "killall"
-			subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+			#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 			kill_process()
 			if vis_active:
-				print "proj", thread_test.fbi_opt
+				#print "proj", thread_test.fbi_opt
 				subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 
 		except subprocess.CalledProcessError as e:
@@ -94,12 +94,14 @@ class ProjectorThread(threading.Thread):
 		self.is_running = True
 		while self.is_running:
 			if not self.queue.empty():
+				print "there's a new proj command"
 				visual = self.queue.get()
 				new_img = True
-
-			if new_img:
 				num = num+1
 				projector(visual,num, self.proj_active)
+
+			if new_img:
+				
 				new_img = False
 
 

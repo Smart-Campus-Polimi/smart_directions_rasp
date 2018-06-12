@@ -202,6 +202,7 @@ def stop_single_process(item):
 		if mac_target in projector_up:
 			#delete user from list and send to projector thread
 			logging.info("Delete projector usr %s", mac_target)
+			print "del user for inactivity"
 			del projector_up[mac_target]
 			projector_queue.put(projector_up)
 		
@@ -365,11 +366,13 @@ if __name__ == "__main__":
 						logging.info("New image")
 						if mac_target not in projector_up:
 							projector_up[mac_target] = [direction, user_color(mac_target)]
+							print projector_up
 							projector_queue.put(projector_up)
 
 					if not new_proj_status:
 						logging.info("Remove an image")
 						del projector_up[mac_target]
+						print projector_up
 						projector_queue.put(projector_up)
 					
 
