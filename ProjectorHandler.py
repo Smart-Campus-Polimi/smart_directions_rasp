@@ -96,6 +96,7 @@ class ProjectorThread(threading.Thread):
 			if not self.queue.empty():
 				print "there's a new proj command"
 				visual = self.queue.get()
+				print "i project ", visual
 				new_img = True
 				num = num+1
 				projector(visual,num, self.proj_active)
