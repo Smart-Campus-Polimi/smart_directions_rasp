@@ -273,7 +273,7 @@ if __name__ == "__main__":
 	logging.info("Starting main...")
 	#setup display
 	logging.debug("Killing fbi")
-	subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+	#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 
 	logging.debug("Opening chvt 9 (black screen)")
 	
