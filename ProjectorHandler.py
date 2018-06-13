@@ -74,7 +74,7 @@ def projector(my_indication,my_num, vis_active):
 			#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 			kill_process()
 			if vis_active:
-				subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', "arrows/bkgnd_black.jpg"], stderr=subprocess.PIPE)
+				subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', 'arrows/bkgnd_black.jpg'], stderr=subprocess.PIPE)
 				#print "proj", thread_test.fbi_opt
 				#subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 
