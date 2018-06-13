@@ -259,7 +259,7 @@ def create_user(my_item, my_mac):
 	user.start()
 
 	#create timer
-	timer = threading.Timer(60.0, stop_timer, [my_mac, datetime.now()])
+	timer = threading.Timer(360.0, stop_timer, [my_mac, datetime.now()])
 	timer.start()
 	timer_sniffer.append([timer, my_mac])
 	logging.info("New user %s!", my_mac) 
@@ -382,7 +382,7 @@ if __name__ == "__main__":
 					if final_pos:
 						print "The user is arrived to the final step, sending msg to the other sniffers..."
 						logging.info("The user is in the final step")
-						time.sleep(15)
+						time.sleep(20)
 						logging.info("Sending msg to the others sniffers")
 						mqtt_pub_q.put(mac_target)
 
