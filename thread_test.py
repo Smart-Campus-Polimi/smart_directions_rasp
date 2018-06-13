@@ -120,7 +120,8 @@ def signal_handler(signal, frame):
 
 	if fbi_opt:
 		logging.info("Reopen display")
-		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+		ProjectorHandler.kill_process()
+		#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 		#subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
 
 	logging.info("Closing the program")
