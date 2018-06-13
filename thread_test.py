@@ -120,7 +120,8 @@ def signal_handler(signal, frame):
 
 	if fbi_opt:
 		logging.info("Reopen display")
-		subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
+		subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
+		#subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
 
 	logging.info("Closing the program")
 	sys.exit(0)
@@ -279,7 +280,8 @@ if __name__ == "__main__":
 	args_parser()
 
 	if fbi_opt:
-		subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
+		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', 'arrows/bkgnd_black.jpg'], stderr=subprocess.PIPE)
+		#subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 
 	if xub:
 		broker_address = broker_address_xub
