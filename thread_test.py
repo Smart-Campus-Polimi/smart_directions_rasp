@@ -10,6 +10,7 @@ import Queue
 import subprocess
 import logging
 import os
+import pyglet
 import xml.etree.ElementTree as ET
 import pprint as pp
 from collections import namedtuple
@@ -43,7 +44,7 @@ BUF_SIZE = 10
 global sniffer_queue
 sniffer_queue = Queue.Queue(BUF_SIZE)
 global colors
-colors = ['green', 'red', 'blue', 'black']
+colors = ['green', 'red', 'blue', 'white']
 
 def make_sure_path_exists(path):
 	if not os.path.exists(path):
@@ -73,6 +74,7 @@ broker_address_xub = "10.0.2.15"
 topic_name = "topic/rasp4/directions"
 
 StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
+
 
 
 
@@ -280,8 +282,11 @@ if __name__ == "__main__":
 	
 	args_parser()
 
-	if fbi_opt:
-		subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', 'arrows/bkgnd_black.jpg'], stderr=subprocess.PIPE)
+	
+
+
+	#if fbi_opt:
+	#	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', 'arrows/bkgnd_black.jpg'], stderr=subprocess.PIPE)
 		#subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
 
 	if xub:
@@ -369,13 +374,13 @@ if __name__ == "__main__":
 						logging.info("New image")
 						if mac_target not in projector_up:
 							projector_up[mac_target] = [direction, user_color(mac_target)]
-							print projector_up
+							print "sendo", projector_up
 							projector_queue.put(projector_up)
 
 					if not new_proj_status:
 						logging.info("Remove an image")
 						del projector_up[mac_target]
-						print projector_up
+						print "sendo", projector_up
 						projector_queue.put(projector_up)
 					
 

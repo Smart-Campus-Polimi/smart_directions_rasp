@@ -1,4 +1,5 @@
 from pyglet.gl import *
+import time
 
 class Triangle:
 	def __init__(self):
@@ -9,14 +10,20 @@ class MyWindow(pyglet.window.Window):
 		def __init__(self, *args, **kwargs):
 			super(MyWindow, self).__init__(*args, **kwargs)
 			self.set_minimum_size(400,300)
+			glClearColor(0, 0, 0, 0)
 
 			self.triangle = Triangle()
+
 		def on_draw(self):
+			self.clear()
+
 			self.triangle.vertices.draw(GL_TRIANGLES)
-			
+
+		def on_resize(self, width, height):
+			glViewport(0, 0, width, height)
 
 
 if __name__ == "__main__":
-	window = MyWindow(1280, 720, "test directions")
-	window.on_draw()
+	window = MyWindow(1280, 720, "test directions", resizable=False)
+	#window.on_draw()
 	pyglet.app.run()
