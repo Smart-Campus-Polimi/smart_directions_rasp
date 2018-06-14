@@ -12,5 +12,5 @@ pyglet.gl.glClearColor(*green)
 @win.event
 def on_draw():
     win.clear()
-    #sprite.draw()
+    sprite.draw()
 pyglet.app.run()
