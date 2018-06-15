@@ -292,7 +292,7 @@ if __name__ == "__main__":
 		broker_address = broker_address_xub
 		logging.debug("Set broker address in xub mode: "+ broker_address)
 
-	map_root = open_map('map.xml')
+	map_root = open_map(pwd+'map.xml')
 	
 	logging.info("the broker_address is "+broker_address)
 
