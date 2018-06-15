@@ -14,7 +14,6 @@ global projector_queue
 
 ### PYGLET CLASS
 from pyglet.gl import *
-from draw_arrows import DrawArrows
 
 
 empty = [0.0,0.0,0.0, 0.0,0.0,0.0, 0.0,0.0,0.0]
