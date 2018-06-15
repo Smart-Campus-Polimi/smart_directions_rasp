@@ -10,7 +10,6 @@ import Queue
 import subprocess
 import logging
 import os
-import pyglet
 import xml.etree.ElementTree as ET
 import pprint as pp
 from collections import namedtuple
@@ -99,13 +98,14 @@ def signal_handler(signal, frame):
 
 	
 	#TODO try catch
+	'''
 	try:
 		killall_fbi = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
 		logging.debug("Closing fbi process %s", killall_fbi)
 	except subprocess.CalledProcessError as e:
 		logging.warning(e)
 		logging.warning("No fbi process")
-	
+	'''
 	try:
 		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
 		logging.debug("Closing l2ping process %s", killall_ping)
@@ -122,7 +122,7 @@ def signal_handler(signal, frame):
 
 	if fbi_opt:
 		logging.info("Reopen display")
-		ProjectorHandler.kill_process()
+		#ProjectorHandler.kill_process()
 		#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 		#subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
 
@@ -327,7 +327,6 @@ if __name__ == "__main__":
 	timetable = {}
 
 	while True: 
-		print "asd"
 		if not mqtt_sub_q.empty():
 			item = mqtt_sub_q.get()
 			logging.info("A new message is arrived.")
