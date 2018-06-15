@@ -54,13 +54,17 @@ colors = {'blue': blue,
 
 
 def draw_fig(indic, cols):
-
+	figures = []
 
 	global my_indication 
 	for key, value in my_indication.iteritems():
 		vertices = pyglet.graphics.vertex_list(6, ('v3f', indications[value[0]]),
 											  ('c3B', colors[value[1]]))
-		vertices.draw(pyglet.gl.GL_POLYGON)
+		
+		figures.append(vertices)
+
+	for fig in figures:
+		fig.draw(pyglet.gl.GL_POLYGON)
 
 class MyWindow(pyglet.window.Window):
 		def __init__(self, *args, **kwargs):
@@ -169,7 +173,7 @@ class ProjectorThread(threading.Thread):
 
 	def run(self):
 
-		window = MyWindow(1280, 720, "test directions", resizable=False, visible=True, fullscreen=False)
+		window = MyWindow(1024, 768, "test directions", resizable=False, visible=True, fullscreen=False)
 		pyglet.app.run()
 
 
