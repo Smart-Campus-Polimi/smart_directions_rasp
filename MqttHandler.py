@@ -29,6 +29,7 @@ class Receiver:
 	def on_message(self, client, userdata, msg):
 			logging.info("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
 			msg_mqtt_raw = str(msg.payload.decode("utf-8"))
+			print "receive a msg in MQTT"
 			
 			#can be deleted
 			if (msg.payload=="disconnect"):
@@ -57,6 +58,7 @@ class Receiver:
 				if not self.queue_sub.full():
 					self.queue_sub.put(start_msg)
 					logging.debug("putting msg %s in queue", start_msg)
+					print "put in queue"
 				else:
 					logging.warning("Queue is full %s", q)
 					print "Queue is full!"

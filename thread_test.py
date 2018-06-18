@@ -10,7 +10,6 @@ import Queue
 import subprocess
 import logging
 import os
-import pyglet
 import xml.etree.ElementTree as ET
 import pprint as pp
 from collections import namedtuple
@@ -99,13 +98,14 @@ def signal_handler(signal, frame):
 
 	
 	#TODO try catch
+	'''
 	try:
 		killall_fbi = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
 		logging.debug("Closing fbi process %s", killall_fbi)
 	except subprocess.CalledProcessError as e:
 		logging.warning(e)
 		logging.warning("No fbi process")
-	
+	'''
 	try:
 		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
 		logging.debug("Closing l2ping process %s", killall_ping)
@@ -122,7 +122,7 @@ def signal_handler(signal, frame):
 
 	if fbi_opt:
 		logging.info("Reopen display")
-		ProjectorHandler.kill_process()
+		#ProjectorHandler.kill_process()
 		#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
 		#subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
 
@@ -228,6 +228,14 @@ def stop_timer(mac_addr, ts):
 		stop_msg = StopMsg(mac_address=mac_addr, timestamp=ts)
 		stop_single_process(stop_msg)
 		logging.debug("Send stop msg in queue")
+
+def final_pos_timer(mac_addr, ts):
+	print "final position for user ", mac_addr
+	logging.info("final position for user %s", mac_addr)
+
+	if is_in_list(mac_addr):
+		mqtt_pub_q.put(mac_addr)
+		logging.debug("put in mqtt queue for final msg")
 	
 def assign_color():
 	if len(colors)>0:
@@ -292,7 +300,7 @@ if __name__ == "__main__":
 		broker_address = broker_address_xub
 		logging.debug("Set broker address in xub mode: "+ broker_address)
 
-	map_root = open_map('map.xml')
+	map_root = open_map(pwd+'map.xml')
 	
 	logging.info("the broker_address is "+broker_address)
 
@@ -327,7 +335,6 @@ if __name__ == "__main__":
 	timetable = {}
 
 	while True: 
-		print "asd"
 		if not mqtt_sub_q.empty():
 			item = mqtt_sub_q.get()
 			logging.info("A new message is arrived.")
@@ -387,9 +394,12 @@ if __name__ == "__main__":
 					if final_pos:
 						print "The user is arrived to the final step, sending msg to the other sniffers..."
 						logging.info("The user is in the final step")
-						time.sleep(20)
-						logging.info("Sending msg to the others sniffers")
-						mqtt_pub_q.put(mac_target)
+						timer_final_pos = threading.Timer(15.0, final_pos_timer, [mac_target, datetime.now()])
+						timer_final_pos.start()
+
+						#time.sleep(20)
+						#logging.info("Sending msg to the others sniffers")
+						#mqtt_pub_q.put(mac_target)
 
 		t_sniffer = [t for t in t_sniffer if t[0].is_alive()]
 
