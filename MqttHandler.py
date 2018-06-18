@@ -31,11 +31,6 @@ class Receiver:
 			msg_mqtt_raw = str(msg.payload.decode("utf-8"))
 			print "receive a msg in MQTT"
 			
-			#can be deleted
-			if (msg.payload=="disconnect"):
-				logging.debug("disconnection through message")
-				client.disconnect()
-				return 
 
 			if msg.topic == thread_test.topic_name:
 				logging.info("starting msg is received")
@@ -106,10 +101,7 @@ class MqttThread(threading.Thread):
 				
 				self.client.publish("stop_ping", final_pos_msg, qos=1)
 				logging.info("Sending the final message")
-				
-		#loop until disconnect
-		#client.loop_forever()
-			
+
 	
 	def stop(self):
 		logging.info("disconnect mqtt")

@@ -182,7 +182,6 @@ class PingThread(threading.Thread):
 
 
 			self.rssi, self.ping = self.bt.rssi()
-			#logging.debug("reading rssi: %s", self.rssi)
 
 			if self.rssi is not None:
 				if self.rssi == "OOR":
@@ -194,7 +193,6 @@ class PingThread(threading.Thread):
 						self.rssi_avg, self.count, self.sum_rssi = average_rssi(self.rssi, self.count, self.sum_rssi)
 						self.oor_count = 0
 						create_csv(self.f, self.mac_target, self.rssi, self.ping, datetime.now())
-						#logging.debug("puntual rssi: %s", rssi)
 					except ValueError as e:
 						logging.error("Rssi concersion error %s", e)
 						print "Conversion error!"

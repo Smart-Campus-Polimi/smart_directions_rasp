@@ -63,7 +63,7 @@ make_sure_path_exists(ping_csv_path)
 #make_sure_path_exists(session_csv_path)
 
 rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
-logging.basicConfig(filename= 'rasp'+rasp_id+'.log',level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename= pwd+'rasp'+rasp_id+'.log',level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
@@ -97,15 +97,6 @@ def signal_handler(signal, frame):
 	logging.info("Stop projector thread")
 
 	
-	#TODO try catch
-	'''
-	try:
-		killall_fbi = subprocess.check_output(['killall', 'fbi'], stderr=subprocess.PIPE)
-		logging.debug("Closing fbi process %s", killall_fbi)
-	except subprocess.CalledProcessError as e:
-		logging.warning(e)
-		logging.warning("No fbi process")
-	'''
 	try:
 		killall_ping = subprocess.check_output(['killall', 'l2ping'], stderr=subprocess.PIPE)
 		logging.debug("Closing l2ping process %s", killall_ping)
@@ -120,12 +111,7 @@ def signal_handler(signal, frame):
 	for t in timer_sniffer:
 		t[0].cancel()
 
-	if fbi_opt:
-		logging.info("Reopen display")
-		#ProjectorHandler.kill_process()
-		#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
-		#subprocess.Popen(['chvt', '9', '&&', 'chvt', '7'], stderr=subprocess.PIPE)
-
+		
 	logging.info("Closing the program")
 	sys.exit(0)
 
@@ -282,20 +268,10 @@ if __name__ == "__main__":
 	print "SM4RT_D1R3CT10Nz v0.3 thread", rasp_id
 	logging.info("Starting main...")
 	#setup display
-	logging.debug("Killing fbi")
-	#subprocess.Popen(['killall', 'fbi'], stderr=subprocess.PIPE)
-
-	logging.debug("Opening chvt 9 (black screen)")
 	
 	args_parser()
 
 	
-
-
-	#if fbi_opt:
-	#	subprocess.Popen(['fbi','-a', '--noverbose', '-T', '1', 'arrows/bkgnd_black.jpg'], stderr=subprocess.PIPE)
-		#subprocess.Popen(['chvt', '9'], stderr=subprocess.PIPE)
-
 	if xub:
 		broker_address = broker_address_xub
 		logging.debug("Set broker address in xub mode: "+ broker_address)
@@ -397,9 +373,6 @@ if __name__ == "__main__":
 						timer_final_pos = threading.Timer(15.0, final_pos_timer, [mac_target, datetime.now()])
 						timer_final_pos.start()
 
-						#time.sleep(20)
-						#logging.info("Sending msg to the others sniffers")
-						#mqtt_pub_q.put(mac_target)
-
+						
 		t_sniffer = [t for t in t_sniffer if t[0].is_alive()]
 

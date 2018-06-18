@@ -2,6 +2,7 @@
 
 import subprocess
 import logging
+import thread_test
 
 class bluetoothHandler:
 
@@ -11,7 +12,9 @@ class bluetoothHandler:
 	def start(self, mac_address):
 		self.mac_address = mac_address
 
-		self.ping = subprocess.Popen(['unbuffer','./infinite_ping.sh', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		pwd = thread_test.pwd
+		print "the pwd now is", pwd
+		self.ping = subprocess.Popen(['unbuffer', pwd+'./infinite_ping.sh', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		logging.info("open infinite ping %s", self.ping)
 		return self.ping
 
