@@ -10,11 +10,6 @@ import errno
 
 import thread_test
 
-#sx
-#dx
-#down
-#up
-
 global projector_queue
 
 ### PYGLET CLASS
@@ -24,19 +19,25 @@ from draw_arrows import DrawArrows
 
 empty = [0.0,0.0,0.0, 0.0,0.0,0.0, 0.0,0.0,0.0]
 global my_indication, my_color
-my_indication = []
+my_indication = {}
 my_color = []
 
-up = [-0.5,-0.5,0.0, 0.5,-0.5,0.0, 0.0,0.5,0.0]
-down = [0.5,0.5,0.0, -0.5,0.5,0.0, 0.0,-0.5,0.0]
-up_dx = [-0.5,0.5,0.0, 0.0,0.5,0.0, -0.5,-0.5,0.0]
-sx = [-0.3,0.0,0.0, 0.5,0.5,0.0, 0.5,-0.5,0.0]
-dx = [0.3,0.0,0.0, -0.5,0.5,0.0, -0.5,-0.5,0.0]
 
-blue = [0,0,205, 0,0,205, 30,144,255]
-red = [139,0,0, 240,128,128, 139,0,0]
-white = [255,255,240, 255,255,240, 248,248,255]
-green = [34,139,34, 50,205,50, 34,139,34]
+o_x = .0
+o_y = .0
+z = .0
+
+
+sx = [o_x-.2,o_y,z, o_x+.0,o_y+.5,.0, o_x+.1,o_y+.5,.0, o_x-.1,o_y,.0, o_x+.1,o_y-.5,.0, o_x,o_y-.5,.0]
+dx = [o_x+.2,o_y,z, o_x+.0,o_y+.5,.0, o_x-.1,o_y+.5,.0, o_x+.1,o_y,.0, o_x-.1,o_y-.5,.0, o_x,o_y-.5,.0]
+down = [-(o_y),(o_x-.2),z, -(o_y+.5),(o_x+.0),.0, -(o_y+.5),(o_x+.1),.0, -(o_y),(o_x-.1),.0, -(o_y-.5),(o_x+.1),.0, -(o_y-.5),(o_x),.0]
+up = [+(o_y),-(o_x-.2),z, +(o_y+.5),-(o_x+.0),.0, +(o_y+.5),-(o_x+.1),.0, +(o_y),-(o_x-.1),.0, +(o_y-.5),-(o_x+.1),.0, +(o_y-.5),-(o_x),.0]
+
+
+blue = [0,0,205, 0,0,205, 30,144,255, 0,0,205, 0,0,205, 0,0,205]
+red = [139,0,0, 240,128,128, 139,0,0, 139,0,0, 139,0,0, 139,0,0]
+white = [255,255,240, 255,255,240, 248,248,255, 255,255,240, 255,255,240, 255,255,240]
+green = [34,139,34, 50,205,50, 34,139,34, 34,139,34, 34,139,34, 34,139,34]
 
 
 indications = {'up': up, 
@@ -50,25 +51,16 @@ colors = {'blue': blue,
 		  'green': green  }
 
 
-def mod_arrows(to_cast):
-	ind = []
-	col = []
-	if to_cast:
-		for key, value in to_cast.iteritems():
-			ind.append(indications[value[0]])
-			col.append(colors[value[1]])
-
-		return ind, col
-	else:
-		return ind, col
 
 
-def draw_fig(inds, cols):
-	print "inds, col", inds, cols
-	for indic in inds:
-		vertices = pyglet.graphics.vertex_list(3, ('v3f', indic),
-											  ('c3B', green))
-		vertices.draw(pyglet.gl.GL_TRIANGLES)
+def draw_fig(indic, cols):
+
+
+	global my_indication 
+	for key, value in my_indication.iteritems():
+		vertices = pyglet.graphics.vertex_list(6, ('v3f', indications[value[0]]),
+											  ('c3B', colors[value[1]]))
+		vertices.draw(pyglet.gl.GL_POLYGON)
 
 class MyWindow(pyglet.window.Window):
 		def __init__(self, *args, **kwargs):
@@ -86,15 +78,14 @@ class MyWindow(pyglet.window.Window):
 			draw_fig(my_indication, my_color)
 		
 		def update(self, dt):
-
 			if not projector_queue.empty():
 				print "there's a new proj command"
 				self.visual = projector_queue.get()
 
-				global my_indication, my_color
-				my_indication, my_color = mod_arrows(self.visual)
-				new_img = True
+				print "visual", self.visual
 
+				global my_indication, my_color
+				my_indication = self.visual
 
 		def on_resize(self, width, height):
 			glViewport(0, 0, width, height)
@@ -174,13 +165,13 @@ class ProjectorThread(threading.Thread):
 		global projector_queue
 		projector_queue = queue
 		self.proj_active = proj_active
-		window = MyWindow(1280, 720, "test directions", resizable=False, visible=True, fullscreen=False)
 		
-
 
 	def run(self):
 
+		window = MyWindow(1280, 720, "test directions", resizable=False, visible=True, fullscreen=False)
 		pyglet.app.run()
+
 
 
 		'''

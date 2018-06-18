@@ -206,7 +206,6 @@ def stop_single_process(item):
 		if mac_target in projector_up:
 			#delete user from list and send to projector thread
 			logging.info("Delete projector usr %s", mac_target)
-			print "del user for inactivity"
 			del projector_up[mac_target]
 			projector_queue.put(projector_up)
 		
@@ -328,6 +327,7 @@ if __name__ == "__main__":
 	timetable = {}
 
 	while True: 
+		print "asd"
 		if not mqtt_sub_q.empty():
 			item = mqtt_sub_q.get()
 			logging.info("A new message is arrived.")
