@@ -16,23 +16,47 @@ global projector_queue
 from pyglet.gl import *
 
 
-empty = [0.0,0.0,0.0, 0.0,0.0,0.0, 0.0,0.0,0.0]
 global my_indication, my_color
 my_indication = {}
 my_color = []
 
 
+#### ARROWS
 o_x = .0
 o_y = .0
-z = .0
+offset = .15
+offset_thick = .05  
 
 
-sx = [o_x-.2,o_y,z, o_x+.0,o_y+.5,.0, o_x+.1,o_y+.5,.0, o_x-.1,o_y,.0, o_x+.1,o_y-.5,.0, o_x,o_y-.5,.0]
-dx = [o_x+.2,o_y,z, o_x+.0,o_y+.5,.0, o_x-.1,o_y+.5,.0, o_x+.1,o_y,.0, o_x-.1,o_y-.5,.0, o_x,o_y-.5,.0]
-down = [-(o_y),(o_x-.2),z, -(o_y+.5),(o_x+.0),.0, -(o_y+.5),(o_x+.1),.0, -(o_y),(o_x-.1),.0, -(o_y-.5),(o_x+.1),.0, -(o_y-.5),(o_x),.0]
-up = [+(o_y),-(o_x-.2),z, +(o_y+.5),-(o_x+.0),.0, +(o_y+.5),-(o_x+.1),.0, +(o_y),-(o_x-.1),.0, +(o_y-.5),-(o_x+.1),.0, +(o_y-.5),-(o_x),.0]
+sx = [	o_x-.2,     o_y,        .0, 
+		o_x+.0,     o_y+.5,     .0,
+		o_x+.1,     o_y+.5,     .0,
+		o_x-.1,     o_y,        .0,
+		o_x+.1,     o_y-.5,     .0,
+		o_x,        o_y-.5,     .0]
 
+dx = [		(o_x+.2),                   -(o_y),                .0,
+			(o_x+.0),                   -(o_y+.5 -offset),     .0,
+			(o_x-.1),                   -(o_y+.5 -offset),     .0,
+			(o_x+.1),                   -(o_y),                .0,
+			(o_x-.1),                   -(o_y-.5 +offset),     .0,
+			(o_x),                      -(o_y-.5 +offset),     .0]
+		
+down = [	-(o_y),               +(o_x-.2),                  .0, 
+			-(o_y+.5 -offset),    +(o_x+.0),                  .0,
+			-(o_y+.5 -offset),    +(o_x+.1+offset_thick),     .0,
+			-(o_y),               +(o_x-.1+offset_thick),     .0,
+			-(o_y-.5 +offset),    +(o_x+.1+offset_thick),     .0,
+			-(o_y-.5 +offset),    +(o_x),                     .0]
 
+up = [		+(o_y),               -(o_x-.2),                  .0, 
+			+(o_y+.5 -offset),    -(o_x+.0),                  .0,
+			+(o_y+.5 -offset),    -(o_x+.1+offset_thick),     .0,
+			+(o_y),               -(o_x-.1+offset_thick),     .0,
+			+(o_y-.5 +offset),    -(o_x+.1+offset_thick),     .0,
+			+(o_y-.5 +offset),    -(o_x),                     .0] 
+
+####COLORS
 blue = [0,0,205, 0,0,205, 30,144,255, 0,0,205, 0,0,205, 0,0,205]
 red = [139,0,0, 240,128,128, 139,0,0, 139,0,0, 139,0,0, 139,0,0]
 white = [255,255,240, 255,255,240, 248,248,255, 255,255,240, 255,255,240, 255,255,240]
@@ -49,15 +73,97 @@ colors = {'blue': blue,
 		  'white': white,
 		  'green': green  }
 
+def move_arrow_left(arrow):
+    new_pos = []
+    for coord in range(0,len(arrow)):
+        my_pos = float(arrow[coord])
+        if coord % 3 == 0:
+            my_pos = my_pos - 0.6
+            my_pos = float("{0:.2f}".format(my_pos))
+        new_pos.append(float(my_pos))
+    return new_pos
 
+def move_arrow_right(arrow):
+    new_pos = []
+    for coord in range(0,len(arrow)):
+        my_pos = float(arrow[coord])
+        if coord % 3 == 0:
+            my_pos = my_pos + 0.6
+            my_pos = float("{0:.2f}".format(my_pos))
+        new_pos.append(float(my_pos))
 
+    return new_pos
 
+def move_arrow_down(arrow):
+    new_pos = []
+    for coord in range(0,len(arrow)):
+        my_pos = float(arrow[coord])
+        if (coord % 3) == 1:
+            my_pos = my_pos - 0.6
+            my_pos = float("{0:.2f}".format(my_pos))
+        new_pos.append(float(my_pos))
+
+    return new_pos
+
+def move_arrow_up(arrow):
+    new_pos = []
+    for coord in range(0,len(arrow)):
+        my_pos = float(arrow[coord])
+        if (coord % 3) == 1:
+            my_pos = my_pos + 0.6
+            my_pos = float("{0:.2f}".format(my_pos))
+        new_pos.append(float(my_pos))
+
+    return new_pos
+
+global prec_len
+prec_len = 0
 def draw_fig(indic, cols):
 	figures = []
+	global prec_len
+	if prec_len != len(my_indication):
+		print "to print: ", my_indication
+		prec_len = len(my_indication)
 
-	global my_indication 
+
+	global my_indication
+	j = 0
 	for key, value in my_indication.iteritems():
-		vertices = pyglet.graphics.vertex_list(6, ('v3f', indications[value[0]]),
+		if len(my_indication) == 1:
+			print_arr = indications[value[0]]
+
+		if len(my_indication) == 2:
+			if j == 0:
+				print_arr = move_arrow_right(indications[value[0]])
+			if j == 1:
+				print_arr = move_arrow_left(indications[value[0]])
+			j = j+ 1
+			
+
+		if len(my_indication) == 3:
+			if j == 0:
+				print_arr = move_arrow_up(move_arrow_right(indications[value[0]]))
+			if j == 1:
+				print_arr = move_arrow_up(move_arrow_left(indications[value[0]]))
+			if j == 2:
+				print_arr = move_arrow_down(indications[value[0]])
+			j = j+ 1
+			
+
+		if len(my_indication) == 4:
+			if j == 0:
+				print_arr = move_arrow_up(move_arrow_right(indications[value[0]]))
+			if j == 1:
+				print_arr = move_arrow_up(move_arrow_left(indications[value[0]]))
+			if j == 2:
+				print_arr = move_arrow_down(move_arrow_right(indications[value[0]]))
+			if j == 3:
+				print_arr = move_arrow_down(move_arrow_left(indications[value[0]]))
+			
+			j = j+ 1
+			
+
+		vertices = pyglet.graphics.vertex_list(6, ('v3f',print_arr),
 											  ('c3B', colors[value[1]]))
 		
 		figures.append(vertices)
@@ -70,7 +176,7 @@ class MyWindow(pyglet.window.Window):
 			super(MyWindow, self).__init__(*args, **kwargs)
 			self.set_minimum_size(400,300)
 			glClearColor(0, 0, 0, 0)
-			pyglet.clock.schedule_interval(self.update, 1.0/24.0)
+			pyglet.clock.schedule_interval(self.update, 5.0/24.0)
 			self.visual = {}
 
 			
@@ -97,30 +203,30 @@ class MyWindow(pyglet.window.Window):
 
 def kill_pid(pid):
 
-    if pid < 0:
-        return False
-    if pid == 0:
-        # According to "man 2 kill" PID 0 refers to every process
-        # in the process group of the calling process.
-        # On certain systems 0 is a valid PID but we have no way
-        # to know that in a portable fashion.
-        raise ValueError('invalid PID 0')
-    try:
-    	print "kill ", pid
-        os.kill(pid, 9)
-    except OSError as err:
-        if err.errno == errno.ESRCH:
-            # ESRCH == No such process
-            return False
-        elif err.errno == errno.EPERM:
-            # EPERM clearly means there's a process to deny access to
-            return True
-        else:
-            # According to "man 2 kill" possible error values are
-            # (EINVAL, EPERM, ESRCH)
-            raise
-    else:
-        return True
+	if pid < 0:
+		return False
+	if pid == 0:
+		# According to "man 2 kill" PID 0 refers to every process
+		# in the process group of the calling process.
+		# On certain systems 0 is a valid PID but we have no way
+		# to know that in a portable fashion.
+		raise ValueError('invalid PID 0')
+	try:
+		print "kill ", pid
+		os.kill(pid, 9)
+	except OSError as err:
+		if err.errno == errno.ESRCH:
+			# ESRCH == No such process
+			return False
+		elif err.errno == errno.EPERM:
+			# EPERM clearly means there's a process to deny access to
+			return True
+		else:
+			# According to "man 2 kill" possible error values are
+			# (EINVAL, EPERM, ESRCH)
+			raise
+	else:
+		return True
 
 def kill_process():
 	fbi_process = subprocess.check_output(['sh', 'check_process_running.sh', 'fbi'])

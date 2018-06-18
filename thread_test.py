@@ -228,6 +228,14 @@ def stop_timer(mac_addr, ts):
 		stop_msg = StopMsg(mac_address=mac_addr, timestamp=ts)
 		stop_single_process(stop_msg)
 		logging.debug("Send stop msg in queue")
+
+def final_pos_timer(mac_addr, ts):
+	print "final position for user ", mac_addr
+	logging.info("final position for user %s", mac_addr)
+
+	if is_in_list(mac_addr):
+		mqtt_pub_q.put(mac_addr)
+		logging.debug("put in mqtt queue for final msg")
 	
 def assign_color():
 	if len(colors)>0:
@@ -386,9 +394,12 @@ if __name__ == "__main__":
 					if final_pos:
 						print "The user is arrived to the final step, sending msg to the other sniffers..."
 						logging.info("The user is in the final step")
-						time.sleep(20)
-						logging.info("Sending msg to the others sniffers")
-						mqtt_pub_q.put(mac_target)
+						timer_final_pos = threading.Timer(15.0, final_pos_timer, [mac_target, datetime.now()])
+						timer_final_pos.start()
+
+						#time.sleep(20)
+						#logging.info("Sending msg to the others sniffers")
+						#mqtt_pub_q.put(mac_target)
 
 		t_sniffer = [t for t in t_sniffer if t[0].is_alive()]
 
