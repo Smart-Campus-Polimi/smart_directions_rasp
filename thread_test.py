@@ -68,7 +68,7 @@ logging.basicConfig(filename= pwd+'rasp'+rasp_id+'.log',level=logging.INFO, form
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
 
-broker_address = "10.172.0.11" 
+broker_address = "10.79.1.176" 
 broker_address_xub = "10.0.2.15" 
 topic_name = "topic/rasp4/directions"
 
