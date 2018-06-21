@@ -37,8 +37,23 @@ arrow_up = [+(o_y),               -(o_x-.2),                   z,
             +(o_y-.5 +offset),    -(o_x+.1+offset_thick),     .0,
             +(o_y-.5 +offset),    -(o_x),                     .0]     
 
+arrows = {'sx': arrow_sx,
+          'dx': arrow_dx,
+          'up': arrow_up,
+          'down': arrow_down}
+
+def move_arrow(my_arrow, offset):
+    new_pos = []
 
 
+    for coord in range(0,len(my_arrow)):
+        my_pos = float(my_arrow[coord])
+        if coord % 3 == 0:
+            my_pos = my_pos + offset
+            my_pos = float("{0:.2f}".format(my_pos))
+        new_pos.append(float(my_pos))
+
+    return new_pos
 
 def move_arrow_left(arrow):
     new_pos = []
@@ -51,16 +66,8 @@ def move_arrow_left(arrow):
     return new_pos
 
 def move_arrow_right(arrow):
-    new_pos = []
-    for coord in range(0,len(arrow)):
-        my_pos = float(arrow[coord])
-        if coord % 3 == 0:
-            my_pos = my_pos + 0.6
-            my_pos = float("{0:.2f}".format(my_pos))
-        new_pos.append(float(my_pos))
-
-    return new_pos
-
+    return move_arrow(arrow, + 0.6)
+   
 def move_arrow_down(arrow):
     new_pos = []
     for coord in range(0,len(arrow)):
@@ -84,43 +91,51 @@ def move_arrow_up(arrow):
     return new_pos
 
 
+def create_multi_arrow(pos):
+    figures = []
+    for i in range(-2,3.0,1.0):
+        vertices = pyglet.graphics.vertex_list(6, ('v3f', move_arrow(pos, +0.2*i)),
+                                                       ('c3B', [100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220]))
+
+        figures.append(vertices)
+
+    return figures
+
+
 class Triangle:
 
 
     def __init__(self):
 
-        self.figures = []
+        self.figures = create_multi_arrow(arrow_dx)
 
-        print "qua", arrow_down
         
         #pos_dx = move_arrow_right(arrow_dx)
         #pos_sx = move_arrow_left(arrow_up)
-        pos_down = move_arrow_down(arrow_dx)
-        pos_up = move_arrow_up(arrow_up)
-        pos_down_sx = move_arrow_left(pos_down)
-        pos_down_dx = move_arrow_right(pos_down)
-        pos_up_sx = move_arrow_left(pos_up)
-        pos_up_dx = move_arrow_right(pos_up)
+        #pos_down = move_arrow_down(arrow_dx)
+        #pos_up = move_arrow_up(arrow_up)
+        #pos_down_sx = move_arrow_left(pos_down)
+        #pos_down_dx = move_arrow_right(pos_down)
+        #pos_up_sx = move_arrow_left(pos_up)
+        #pos_up_dx = move_arrow_right(pos_up)
 
      
-        self.vertices = pyglet.graphics.vertex_list(6, ('v3f', pos_down_sx),
-                                                       ('c3B', [100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220]))
+       
 
 
+        #self.vertices_2 = pyglet.graphics.vertex_list(6, ('v3f', pos_down_dx), 
+                                                        # ('c3b', [100,00,220, 100,00,220, 100,00,220, 100,00,220, 100,00,220, 100,200,020]))
 
-        self.vertices_2 = pyglet.graphics.vertex_list(6, ('v3f', pos_down_dx), 
-                                                         ('c3b', [100,00,220, 100,00,220, 100,00,220, 100,00,220, 100,00,220, 100,200,020]))
+        #self.vertices_3 = pyglet.graphics.vertex_list(6, ('v3f', pos_up_sx), 
+                                                         #('c3b', [100,00,220, 100,00,220, 100,00,220, 100,00,220, 100,00,220, 100,200,020]))
 
-        self.vertices_3 = pyglet.graphics.vertex_list(6, ('v3f', pos_up_sx), 
-                                                         ('c3b', [100,00,220, 100,00,220, 100,00,220, 100,00,220, 100,00,220, 100,200,020]))
+        #self.vertices_4 = pyglet.graphics.vertex_list(6, ('v3f', pos_up_dx),
+                                                         #('c3B', [200,00,220, 0,110,192, 129,0,238, 77,87,81, 1,22,222, 223,12,123]))
 
-        self.vertices_4 = pyglet.graphics.vertex_list(6, ('v3f', pos_up_dx),
-                                                         ('c3B', [200,00,220, 0,110,192, 129,0,238, 77,87,81, 1,22,222, 223,12,123]))
-
-        self.figures.append(self.vertices)
-        self.figures.append(self.vertices_2)
-        self.figures.append(self.vertices_3)
-        self.figures.append(self.vertices_4)
+        #self.figures.append(self.vertices)
+        #self.figures.append(self.vertices_2)
+        #self.figures.append(self.vertices_3)
+        #self.figures.append(self.vertices_4)
 
 
 
