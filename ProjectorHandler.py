@@ -205,7 +205,7 @@ class ProjectorThread(threading.Thread):
 
 	def run(self):
 
-		window = MyWindow(1024, 768, "test directionsolo", resizable=False, visible=True, fullscreen=False)
+		window = MyWindow(1024, 768, "test directionsolo", resizable=False, visible=True, fullscreen=True)
 		pyglet.app.run()
 
 
