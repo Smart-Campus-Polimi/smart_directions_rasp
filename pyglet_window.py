@@ -115,7 +115,8 @@ class Triangle:
 
 
     def __init__(self):
-        self.figures = []
+       
+       ''' 
         self.fig1 = pyglet.graphics.vertex_list(6, ('v3f', arrow_up),
                                                        ('c3B', [100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220]))
 
@@ -126,7 +127,7 @@ class Triangle:
         self.figures.append(self.fig1)
         self.figures.append(self.fig2)
 
-        
+        '''
         #pos_dx = move_arrow_right(arrow_dx)
         #pos_sx = move_arrow_left(arrow_up)
         #pos_down = move_arrow_down(arrow_dx)
@@ -155,40 +156,50 @@ class Triangle:
         #self.figures.append(self.vertices_4)
 
 
-
 class MyWindow(pyglet.window.Window):
         def __init__(self, *args, **kwargs):
             super(MyWindow, self).__init__(*args, **kwargs)
             self.set_minimum_size(400,300)
             glClearColor(0, 0, 0, 0)
-            pyglet.clock.schedule_interval(self.update, 1.0/24.0)
+            pyglet.clock.schedule_interval(self.update, 5.0/24.0)
             self.triangle = Triangle()
+            self.arrow_dx_new = arrow_dx[:]
+            self.moving = 0
             print height/2
             print width/2
             print rapp1, rapp2
+           
 
             
 
         def on_draw(self):
             self.clear()
+            self.figures = []
+            self.fig1 = pyglet.graphics.vertex_list(6, ('v3f', self.arrow_dx_new),
+                                                       ('c3B', [100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220]))
 
-            for fig in self.triangle.figures:
+            self.figures.append(self.fig1)
+            for fig in self.figures:
                 fig.draw(pyglet.gl.GL_POLYGON)
             
 
 
 
-            pyglet.graphics.draw(8, pyglet.gl.GL_LINES, ("v2f", (-1,-1, 1,1, -1,1, 1,-1, 0,1, 0,-1, 1,0, -1,0)))
-            pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((-width/2),(+height/2), (-width/2),(-height/2)))) #vertical
+            #pyglet.graphics.draw(8, pyglet.gl.GL_LINES, ("v2f", (-1,-1, 1,1, -1,1, 1,-1, 0,1, 0,-1, 1,0, -1,0)))
+            #pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((-width/2),(+height/2), (-width/2),(-height/2)))) #vertical
             #horizontal #x*rapp2, y*rapp1
-            pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((+height/2)*rapp2,(+width/2)*rapp1, (-height/2)*rapp2,(+width/2)*rapp1)))
-            pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((+height/2)*rapp2,(-width/2)*rapp1, (-height/2)*rapp2,(-width/2)*rapp1)))
+            #pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((+height/2)*rapp2,(+width/2)*rapp1, (-height/2)*rapp2,(+width/2)*rapp1)))
+            #pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((+height/2)*rapp2,(-width/2)*rapp1, (-height/2)*rapp2,(-width/2)*rapp1)))
             
         def on_resize(self, width, height):
             glViewport(0, 0, width, height)
 
         def update(self, dt):
-            pass
+            self.arrow_dx_new = move_arrow(self.arrow_dx_new, 0.2)
+            if self.moving%4 == 0:
+                self.arrow_dx_new = arrow_dx[:]
+            self.moving += 1
+
 
 
 if __name__ == "__main__":
