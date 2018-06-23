@@ -5,42 +5,51 @@ import time
 o_x = .0
 o_y = .0
 z = .0
-offset = .15
+
 offset_thick = .05  
 
+offset = .10
+height = .75
+width = .3
+rapp1 = float(1024.0/768.0)
+rapp2 = float(768.0/1024.0)
 
-arrow_sx = [o_x-.2,     o_y,         z, 
-            o_x+.0,     o_y+.5,     .0,
-            o_x+.1,     o_y+.5,     .0,
-            o_x-.1,     o_y,        .0,
-            o_x+.1,     o_y-.5,     .0,
-            o_x,        o_y-.5,     .0]
 
-arrow_dx = [(o_x+.2),                   -(o_y),                 z,
-            (o_x+.0),                   -(o_y+.5 -offset),     .0,
-            (o_x-.1),                   -(o_y+.5 -offset),     .0,
-            (o_x+.1),                   -(o_y),                .0,
-            (o_x-.1),                   -(o_y-.5 +offset),     .0,
-            (o_x),                      -(o_y-.5 +offset),     .0]
-        
-arrow_down = [-(o_y),               +(o_x-.2),                   z, 
-              -(o_y+.5 -offset),    +(o_x+.0),                  .0,
-              -(o_y+.5 -offset),    +(o_x+.1+offset_thick),     .0,
-              -(o_y),               +(o_x-.1+offset_thick),     .0,
-              -(o_y-.5 +offset),    +(o_x+.1+offset_thick),     .0,
-              -(o_y-.5 +offset),    +(o_x),                     .0]
 
-arrow_up = [+(o_y),               -(o_x-.2),                   z, 
-            +(o_y+.5 -offset),    -(o_x+.0),                  .0,
-            +(o_y+.5 -offset),    -(o_x+.1+offset_thick),     .0,
-            +(o_y),               -(o_x-.1+offset_thick),     .0,
-            +(o_y-.5 +offset),    -(o_x+.1+offset_thick),     .0,
-            +(o_y-.5 +offset),    -(o_x),                     .0]     
+arrow_sx = [-width/2+offset,    0,             0,
+             width/2,           height/2,      0,
+             width/2-offset,    height/2,      0,
+            -width/2,           0,             0,
+             width/2-offset,   -height/2,      0,
+             width/2,          -height/2,      0]
+
+arrow_dx = [  width/2-offset,    0,             0,
+             -width/2,           height/2,      0,
+             -width/2+offset,    height/2,      0,
+              width/2,           0,             0,
+             -width/2+offset,   -height/2,      0,
+             -width/2,          -height/2,      0]
+
+
+arrow_up = [          0*rapp2,   -(-width/2+offset)*rapp1,        0,
+            (+height/2)*rapp2,   -(width/2)*rapp1,                0,
+            (+height/2)*rapp2,   -(width/2-offset)*rapp1,         0,
+                      0*rapp2,   -(-width/2)*rapp1,               0,
+            (-height/2)*rapp2,   -(width/2-offset)*rapp1,         0,
+            (-height/2)*rapp2,   -(width/2)*rapp1,                0]
+
+arrow_down = [        0*rapp2,   +(-width/2+offset)*rapp1,        0,
+            (+height/2)*rapp2,   +(width/2)*rapp1,                0,
+            (+height/2)*rapp2,   +(width/2-offset)*rapp1,         0,
+                      0*rapp2,   +(-width/2)*rapp1,               0,
+            (-height/2)*rapp2,   +(width/2-offset)*rapp1,         0,
+            (-height/2)*rapp2,   +(width/2)*rapp1,                0]
 
 arrows = {'sx': arrow_sx,
           'dx': arrow_dx,
           'up': arrow_up,
-          'down': arrow_down}
+          'down': arrow_down
+          }
 
 def move_arrow(my_arrow, offset):
     new_pos = []
@@ -93,8 +102,8 @@ def move_arrow_up(arrow):
 
 def create_multi_arrow(pos):
     figures = []
-    for i in range(-2,3.0,1.0):
-        vertices = pyglet.graphics.vertex_list(6, ('v3f', move_arrow(pos, +0.2*i)),
+    for i in range(-2,2.5,1.0):
+        vertices = pyglet.graphics.vertex_list(6, ('v3f', pos),
                                                        ('c3B', [100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220]))
 
         figures.append(vertices)
@@ -106,8 +115,16 @@ class Triangle:
 
 
     def __init__(self):
+        self.figures = []
+        self.fig1 = pyglet.graphics.vertex_list(6, ('v3f', arrow_up),
+                                                       ('c3B', [100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220]))
 
-        self.figures = create_multi_arrow(arrow_dx)
+
+        self.fig2 = pyglet.graphics.vertex_list(6, ('v3f', arrow_down),
+                                                       ('c3B', [100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220, 100,200,220]))
+
+        self.figures.append(self.fig1)
+        self.figures.append(self.fig2)
 
         
         #pos_dx = move_arrow_right(arrow_dx)
@@ -146,14 +163,27 @@ class MyWindow(pyglet.window.Window):
             glClearColor(0, 0, 0, 0)
             pyglet.clock.schedule_interval(self.update, 1.0/24.0)
             self.triangle = Triangle()
+            print height/2
+            print width/2
+            print rapp1, rapp2
+
+            
 
         def on_draw(self):
             self.clear()
 
             for fig in self.triangle.figures:
                 fig.draw(pyglet.gl.GL_POLYGON)
-                #fig.draw(pyglet.gl.GL_POLYGON)
+            
 
+
+
+            pyglet.graphics.draw(8, pyglet.gl.GL_LINES, ("v2f", (-1,-1, 1,1, -1,1, 1,-1, 0,1, 0,-1, 1,0, -1,0)))
+            pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((-width/2),(+height/2), (-width/2),(-height/2)))) #vertical
+            #horizontal #x*rapp2, y*rapp1
+            pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((+height/2)*rapp2,(+width/2)*rapp1, (-height/2)*rapp2,(+width/2)*rapp1)))
+            pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ("v2f", ((+height/2)*rapp2,(-width/2)*rapp1, (-height/2)*rapp2,(-width/2)*rapp1)))
+            
         def on_resize(self, width, height):
             glViewport(0, 0, width, height)
 
