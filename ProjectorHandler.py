@@ -63,7 +63,7 @@ white = [255,255,240, 255,255,240, 248,248,255, 255,255,240, 255,255,240, 255,25
 green = [34,139,34, 50,205,50, 34,139,34, 34,139,34, 34,139,34, 34,139,34]
 
 
-indications = {'up': up, 
+arrows = {'up': up, 
 			   'down': down,
 			   'sx': sx,
 			   'dx': dx }
@@ -181,6 +181,7 @@ class MyWindow(pyglet.window.Window):
 			draw_fig(my_indication, my_color)
 		
 		def update(self, dt):
+			##check for new arrows
 			if not projector_queue.empty():
 				print "there's a new proj command"
 				self.visual = projector_queue.get()
@@ -189,6 +190,8 @@ class MyWindow(pyglet.window.Window):
 
 				global my_indication, my_color
 				my_indication = self.visual
+			####
+			#animate objects
 
 		def on_resize(self, width, height):
 			glViewport(0, 0, width, height)
