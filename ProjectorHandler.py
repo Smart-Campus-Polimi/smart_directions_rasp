@@ -7,8 +7,9 @@ import subprocess
 import sys
 import os
 import errno
-
+import pprint as pp
 import thread_test
+import copy
 
 global projector_queue
 
@@ -16,45 +17,50 @@ global projector_queue
 from pyglet.gl import *
 
 
-global my_indication, my_color
-my_indication = {}
-my_color = []
+global indications
+indications = {}
 
 
 #### ARROWS
-o_x = .0
-o_y = .0
-offset = .15
-offset_thick = .05  
+window_width = 1024
+window_height = 768
+
+offset = .10
+height = .75
+width = .3
+rapp1 = float(window_width)/float(window_height)
+rapp2 = float(window_height)/float(window_width)
 
 
-sx = [	o_x-.2,     o_y,        .0, 
-		o_x+.0,     o_y+.5,     .0,
-		o_x+.1,     o_y+.5,     .0,
-		o_x-.1,     o_y,        .0,
-		o_x+.1,     o_y-.5,     .0,
-		o_x,        o_y-.5,     .0]
+sx = [	-width/2+offset,    0,             0,
+		 width/2,           height/2,      0,
+		 width/2-offset,    height/2,      0,
+		-width/2,           0,             0,
+		 width/2-offset,   -height/2,      0,
+		 width/2,          -height/2,      0]
 
-dx = [		(o_x+.2),                   -(o_y),                .0,
-			(o_x+.0),                   -(o_y+.5 -offset),     .0,
-			(o_x-.1),                   -(o_y+.5 -offset),     .0,
-			(o_x+.1),                   -(o_y),                .0,
-			(o_x-.1),                   -(o_y-.5 +offset),     .0,
-			(o_x),                      -(o_y-.5 +offset),     .0]
-		
-down = [	-(o_y),               +(o_x-.2),                  .0, 
-			-(o_y+.5 -offset),    +(o_x+.0),                  .0,
-			-(o_y+.5 -offset),    +(o_x+.1+offset_thick),     .0,
-			-(o_y),               +(o_x-.1+offset_thick),     .0,
-			-(o_y-.5 +offset),    +(o_x+.1+offset_thick),     .0,
-			-(o_y-.5 +offset),    +(o_x),                     .0]
+dx = [   width/2-offset,    0,             0,
+		-width/2,           height/2,      0,
+		-width/2+offset,    height/2,      0,
+		 width/2,           0,             0,
+		-width/2+offset,   -height/2,      0,
+		-width/2,          -height/2,      0]
 
-up = [		+(o_y),               -(o_x-.2),                  .0, 
-			+(o_y+.5 -offset),    -(o_x+.0),                  .0,
-			+(o_y+.5 -offset),    -(o_x+.1+offset_thick),     .0,
-			+(o_y),               -(o_x-.1+offset_thick),     .0,
-			+(o_y-.5 +offset),    -(o_x+.1+offset_thick),     .0,
-			+(o_y-.5 +offset),    -(o_x),                     .0] 
+
+up = [  0*rapp2,   			 -(-width/2+offset)*rapp1,        0,
+		(+height/2)*rapp2,   -(width/2)*rapp1,                0,
+		(+height/2)*rapp2,   -(width/2-offset)*rapp1,         0,
+				  0*rapp2,   -(-width/2)*rapp1,               0,
+		(-height/2)*rapp2,   -(width/2-offset)*rapp1,         0,
+		(-height/2)*rapp2,   -(width/2)*rapp1,                0]
+
+down = [0*rapp2,   			 +(-width/2+offset)*rapp1,        0,
+		(+height/2)*rapp2,   +(width/2)*rapp1,                0,
+		(+height/2)*rapp2,   +(width/2-offset)*rapp1,         0,
+				  0*rapp2,   +(-width/2)*rapp1,               0,
+		(-height/2)*rapp2,   +(width/2-offset)*rapp1,         0,
+		(-height/2)*rapp2,   +(width/2)*rapp1,                0]
+
 
 ####COLORS
 blue = [0,0,205, 0,0,205, 30,144,255, 0,0,205, 0,0,205, 0,0,205]
@@ -64,134 +70,170 @@ green = [34,139,34, 50,205,50, 34,139,34, 34,139,34, 34,139,34, 34,139,34]
 
 
 arrows = {'up': up, 
-			   'down': down,
-			   'sx': sx,
-			   'dx': dx }
+		  'down': down,
+		  'sx': sx,
+		  'dx': dx }
 
 colors = {'blue': blue,
 		  'red': red,
 		  'white': white,
 		  'green': green  }
+###### END ARROWS #####
+
+### FUNCTIONS ###
+def update_coordinates(my_indications):
+	j = 0
+	for key, value in my_indications.iteritems():
+		if len(my_indications) == 1:
+			my_indications[key].append(arrows[value[0]])
+		if len(my_indications) == 2:
+			if j == 0:
+				my_indications[key].append(move_arrow_right(arrows[value[0]]))
+			if j == 1:
+				my_indications[key].append(move_arrow_left(arrows[value[0]]))
+
+		if len(my_indications) == 3:
+			if j == 0:
+				my_indications[key].append(move_arrow_up(move_arrow_right(arrows[value[0]])))
+			if j == 1:
+				my_indications[key].append(move_arrow_up(move_arrow_left(arrows[value[0]])))
+			if j == 2:
+				my_indications[key].append(move_arrow_down(arrows[value[0]]))
+
+		if len(my_indications) == 4:
+			if j == 0:
+				my_indications[key].append(move_arrow_up(move_arrow_right(arrows[value[0]])))
+			if j == 1:
+				my_indications[key].append(move_arrow_up(move_arrow_left(arrows[value[0]])))
+			if j == 2:
+				my_indications[key].append(move_arrow_down(move_arrow_right(arrows[value[0]])))
+			if j == 3:
+				my_indications[key].append(move_arrow_down(move_arrow_left(arrows[value[0]])))
+
+		print "j", j
+		j += 1
+
+	return my_indications
+
+def move_arrow(my_arrow, offset, horiz):
+	new_pos = []
+
+	if horiz:
+		flag = 0
+	else:
+		flag = 1
+
+	for coord in range(0,len(my_arrow)):
+		my_pos = float(my_arrow[coord])
+		if coord % 3 == flag:
+			my_pos = float(my_pos) + float(offset)
+			my_pos = float("{0:.2f}".format(my_pos))
+		new_pos.append(float(my_pos))
+
+	return new_pos
+
+def move_arrow_horiz(my_arrow, offset):
+	return move_arrow(my_arrow, offset, horiz=True)
+
+def move_arrow_vertic(my_arrow, offset):
+	return move_arrow(my_arrow, offset, horiz=False)
 
 def move_arrow_left(arrow):
-    new_pos = []
-    for coord in range(0,len(arrow)):
-        my_pos = float(arrow[coord])
-        if coord % 3 == 0:
-            my_pos = my_pos - 0.6
-            my_pos = float("{0:.2f}".format(my_pos))
-        new_pos.append(float(my_pos))
-    return new_pos
+	return move_arrow_horiz(arrow, -.6)
 
 def move_arrow_right(arrow):
-    new_pos = []
-    for coord in range(0,len(arrow)):
-        my_pos = float(arrow[coord])
-        if coord % 3 == 0:
-            my_pos = my_pos + 0.6
-            my_pos = float("{0:.2f}".format(my_pos))
-        new_pos.append(float(my_pos))
-
-    return new_pos
-
+	return move_arrow_horiz(arrow, +.6)
+   
 def move_arrow_down(arrow):
-    new_pos = []
-    for coord in range(0,len(arrow)):
-        my_pos = float(arrow[coord])
-        if (coord % 3) == 1:
-            my_pos = my_pos - 0.6
-            my_pos = float("{0:.2f}".format(my_pos))
-        new_pos.append(float(my_pos))
-
-    return new_pos
+	return move_arrow_vertic(arrow, -.6)
 
 def move_arrow_up(arrow):
-    new_pos = []
-    for coord in range(0,len(arrow)):
-        my_pos = float(arrow[coord])
-        if (coord % 3) == 1:
-            my_pos = my_pos + 0.6
-            my_pos = float("{0:.2f}".format(my_pos))
-        new_pos.append(float(my_pos))
+	return move_arrow_vertic(arrow, +.6)
 
-    return new_pos
+def draw_fig(my_indications):
+	
 
-def draw_fig(indic, cols):
 	figures = []
 
+	for key, value in my_indications.iteritems():
+		fig = pyglet.graphics.vertex_list(6, ('v3f', value[2]), ('c3B', colors[value[1]]))
 
-	global my_indication
-	j = 0
-	for key, value in my_indication.iteritems():
-		if len(my_indication) == 1:
-			print_arr = indications[value[0]]
+		figures.append(fig)
 
-		if len(my_indication) == 2:
-			if j == 0:
-				print_arr = move_arrow_right(indications[value[0]])
-			if j == 1:
-				print_arr = move_arrow_left(indications[value[0]])
-			j = j+ 1
-			
+	return figures
+	
 
-		if len(my_indication) == 3:
-			if j == 0:
-				print_arr = move_arrow_up(move_arrow_right(indications[value[0]]))
-			if j == 1:
-				print_arr = move_arrow_up(move_arrow_left(indications[value[0]]))
-			if j == 2:
-				print_arr = move_arrow_down(indications[value[0]])
-			j = j+ 1
-			
+def check_new_arrows(): 
+	if not projector_queue.empty():
+		global indications
+		indications = copy.deepcopy(projector_queue.get())
+		print "new indication is arrived: ", indications
 
-		if len(my_indication) == 4:
-			if j == 0:
-				print_arr = move_arrow_up(move_arrow_right(indications[value[0]]))
-			if j == 1:
-				print_arr = move_arrow_up(move_arrow_left(indications[value[0]]))
-			if j == 2:
-				print_arr = move_arrow_down(move_arrow_right(indications[value[0]]))
-			if j == 3:
-				print_arr = move_arrow_down(move_arrow_left(indications[value[0]]))
-			
-			j = j+ 1
-			
+		if indications:
+			indications = update_coordinates(indications)
 
-		vertices = pyglet.graphics.vertex_list(6, ('v3f',print_arr),
-											  ('c3B', colors[value[1]]))
-		
-		figures.append(vertices)
+def animate_arrow(my_indications, moving):
+	for key, value in my_indications.iteritems():
+		if 'up' in value[0]:
+			horiz = False
+			my_offset = +.2
+			if moving == 1:
+				my_offset = -.6
+		if 'down' in value[0]:
+			horiz = False
+			my_offset = -.2
+			if moving == 1:
+				my_offset = +.6
+		if 'sx' in value[0]:
+			horiz = True
+			my_offset = -.2
+			if moving == 1:
+				my_offset = +.6
+		if 'dx' in value[0]:
+			my_offset = .2
+			if moving == 1:
+				my_offset = -.6
+			horiz = True
 
-	for fig in figures:
-		fig.draw(pyglet.gl.GL_POLYGON)
+		value[2] = move_arrow(value[2], my_offset, horiz)
+
+	return my_indications
+
+def update_moving(my_mov):
+	my_mov += 1
+	if my_mov == +2:
+		my_mov = -2
+	return my_mov
+### END FUNCTIONS ###
+	
 
 class MyWindow(pyglet.window.Window):
 		def __init__(self, *args, **kwargs):
 			super(MyWindow, self).__init__(*args, **kwargs)
 			self.set_minimum_size(400,300)
 			glClearColor(0, 0, 0, 0)
-			pyglet.clock.schedule_interval(self.update, 5.0/24.0)
-			self.visual = {}
+			pyglet.clock.schedule_interval(self.update, 7.0/24.0)
+			self.moving = 0
 
 			
 
 		def on_draw(self):
 			self.clear()
-			global my_indication, my_color
-			draw_fig(my_indication, my_color)
+			global figures
+			figures = draw_fig(indications)
+			#fig = pyglet.graphics.vertex_list(6, ('v3f', arrows['dx']), ('c3B', blue))
+			for fig in figures:
+				fig.draw(pyglet.gl.GL_POLYGON)
 		
 		def update(self, dt):
-			##check for new arrows
-			if not projector_queue.empty():
-				print "there's a new proj command"
-				self.visual = projector_queue.get()
+			#retrieve arrows from the queue (from main)
+			check_new_arrows()
+			#move the arrows
+			animate_arrow(indications, self.moving)
+			self.moving = update_moving(self.moving)
+			
+			
 
-				print "visual", self.visual
-
-				global my_indication, my_color
-				my_indication = self.visual
-			####
-			#animate objects
 
 		def on_resize(self, width, height):
 			glViewport(0, 0, width, height)
@@ -203,12 +245,11 @@ class ProjectorThread(threading.Thread):
 		threading.Thread.__init__(self)
 		global projector_queue
 		projector_queue = queue
-		self.proj_active = proj_active
+		#self.proj_active = proj_active ##NOT USED!!!
 		
 
 	def run(self):
-
-		window = MyWindow(1024, 768, "test directionsolo", resizable=False, visible=True, fullscreen=True)
+		window = MyWindow(window_width, window_height, "test directions", resizable=False, visible=True, fullscreen=False)
 		pyglet.app.run()
 
 

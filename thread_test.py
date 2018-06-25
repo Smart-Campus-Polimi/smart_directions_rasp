@@ -43,7 +43,7 @@ BUF_SIZE = 10
 global sniffer_queue
 sniffer_queue = Queue.Queue(BUF_SIZE)
 global colors
-colors = ['green', 'red', 'blue', 'white']
+colors = ['green', 'blue', 'red', 'white']
 
 def make_sure_path_exists(path):
 	if not os.path.exists(path):
