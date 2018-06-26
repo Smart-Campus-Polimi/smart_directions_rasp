@@ -56,7 +56,7 @@ def initialize_values():
 	return True, 0, 0, 0, False, False
 
 def user_out_of_range(self):
-		print "Out of Range"
+		print self.mac_target, " -> Out of Range"
 		logging.info("Out of range")
 		if self.print_dir:
 			logging.debug("print dir? %s", self.print_dir)
@@ -91,7 +91,7 @@ def user_in_range(self):
 	self.position = check_proximity(self.rssi_avg)
 	logging.debug("average rssi: %s", self.rssi_avg)
 	logging.debug("position is %s", self.position)
-	print "position:", self.position, "---", self.rssi_avg
+	print self.mac_target, "-> position:", self.position, "---", self.rssi_avg
 
 	if self.position < 4:
 		if not self.print_dir:
@@ -146,7 +146,7 @@ class PingThread(threading.Thread):
 	def run(self):
 		
 
-		self.mac_target, self.place_id_target, __, self.timestamp_target = self.user
+		self.mac_target, self.place_id_target, __, self.timestamp_target, __ = self.user
 		
 		logging.debug("Thread %s is running", self)
 		logging.debug("Thread input params. mac: %s, place_id: %s, ts: %s", self.mac_target, self.place_id_target, self.timestamp_target)
@@ -165,7 +165,6 @@ class PingThread(threading.Thread):
 
 		logging.info("staring while loop")
 		while self.is_running:
-
 			#TODO method
 			#print "inside ping: ", self.stop_queue
 			if not self.stop_queue.empty():

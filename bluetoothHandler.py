@@ -13,7 +13,6 @@ class bluetoothHandler:
 		self.mac_address = mac_address
 
 		pwd = thread_test.pwd
-		print "the pwd now is", pwd
 		self.ping = subprocess.Popen(['unbuffer', pwd+'./infinite_ping.sh', self.mac_address], bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		logging.info("open infinite ping %s", self.ping)
 		return self.ping
@@ -105,5 +104,4 @@ def parse_ping_rssi(line):
 	ping = line[:(offset-13)]
 	ping = ping[(ping.find('time')+4+1):]
 	
-	#print line, rssi, ping
 	return rssi, ping
