@@ -42,8 +42,8 @@ BUF_SIZE = 10
 
 global sniffer_queue
 sniffer_queue = Queue.Queue(BUF_SIZE)
-global colors
-colors = ['green', 'blue', 'red', 'white']
+#global colors
+#colors = ['green', 'blue', 'red', 'white']
 
 def make_sure_path_exists(path):
 	if not os.path.exists(path):
@@ -196,10 +196,10 @@ def stop_single_process(item):
 			projector_queue.put(projector_up)
 		
 		#restore color in list
-		color_dismissed = users_colors[mac_target]
-		colors.append(color_dismissed)
-		color_used.remove(color_dismissed)
-		logging.info("Restore color %s", color_dismissed)
+		#color_dismissed = users_colors[mac_target]
+		#colors.append(color_dismissed)
+		#color_used.remove(color_dismissed)
+		#logging.info("Restore color %s", color_dismissed)
 
 	for t in timer_sniffer:
 		if mac_target in t:
@@ -222,7 +222,7 @@ def final_pos_timer(mac_addr, ts):
 	if is_in_list(mac_addr):
 		mqtt_pub_q.put(mac_addr)
 		logging.debug("put in mqtt queue for final msg")
-	
+'''
 def assign_color():
 	if len(colors)>0:
 		color_chosed = colors[0]
@@ -231,7 +231,7 @@ def assign_color():
 		return color_chosed
 	else:
 		return "Purple"
-
+'''
 def user_color(my_mac):
 	for usr in t_sniffer:
 		if my_mac in usr:
@@ -244,9 +244,12 @@ def create_user(my_item, my_mac):
 	stop_list.append([stop_queue, my_mac])
 	
 	user = PingHandler.PingThread(my_item, map_root, sniffer_queue, stop_queue)
-	users_colors[my_mac] = assign_color()
+	print "the color is: ", my_item[4]
+	col = my_item[4]
+	#maybe unused
+	#users_colors[my_mac] = my_item[4]
 
-	t_sniffer.append([user, my_mac, users_colors[my_mac]])
+	t_sniffer.append([user, my_mac, col])
 
 	
 
@@ -281,11 +284,12 @@ if __name__ == "__main__":
 	logging.info("the broker_address is "+broker_address)
 
 	#GLOBAL VARS
+	'''
 	global users_colors
 	users_colors = {}
 	global color_used
 	color_used = []
-
+	'''
 	global projector_up
 	projector_up = {}
 

@@ -7,7 +7,6 @@ import subprocess
 import sys
 import os
 import errno
-import pprint as pp
 import thread_test
 import copy
 
@@ -110,7 +109,6 @@ def update_coordinates(my_indications):
 			if j == 3:
 				my_indications[key].append(move_arrow_down(move_arrow_left(arrows[value[0]])))
 
-		print "j", j
 		j += 1
 
 	return my_indications

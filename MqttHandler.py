@@ -12,7 +12,7 @@ import thread_test
 #BUF_SIZE = 10
 #q = Queue.Queue(BUF_SIZE)	
 
-StartMsg = namedtuple('StartMsg', ['mac_address', 'place_id', 'id', 'timestamp'])
+StartMsg = namedtuple('StartMsg', ['mac_address', 'place_id', 'id', 'timestamp', 'color'])
 StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
 
 class Receiver:
@@ -47,17 +47,15 @@ class Receiver:
 				start_msg = StartMsg(id=msg_mqtt[0]['id'],
 						 mac_address=msg_mqtt[0]['mac_address'],
 						 place_id=msg_mqtt[0]['place_id'],
-						 timestamp=msg_mqtt[0]['timestamp'])
+						 timestamp=msg_mqtt[0]['timestamp'], 
+						 color=msg_mqtt[0]['color'])
 
 				#add message to queue
 				if not self.queue_sub.full():
 					self.queue_sub.put(start_msg)
 					logging.debug("putting msg %s in queue", start_msg)
-					print "put in queue"
 				else:
 					logging.warning("Queue is full %s", q)
-					print "Queue is full!"
-
 			
 			elif msg.topic == "stop_ping":
 				logging.info("Stopping msg is received")
