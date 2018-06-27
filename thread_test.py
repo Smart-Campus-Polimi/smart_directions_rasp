@@ -374,7 +374,7 @@ if __name__ == "__main__":
 					if final_pos:
 						print "The user is arrived to the final step, sending msg to the other sniffers..."
 						logging.info("The user is in the final step")
-						timer_final_pos = threading.Timer(15.0, final_pos_timer, [mac_target, datetime.now()])
+						timer_final_pos = threading.Timer(20.0, final_pos_timer, [mac_target, datetime.now()])
 						timer_final_pos.start()
 
 						

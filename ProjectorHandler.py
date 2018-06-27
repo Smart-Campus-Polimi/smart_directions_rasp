@@ -31,34 +31,34 @@ rapp1 = float(window_width)/float(window_height)
 rapp2 = float(window_height)/float(window_width)
 
 
-sx = [	-width/2+offset,    0,             0,
+sx = [[	-width/2+offset,    0,             0,
 		 width/2,           height/2,      0,
 		 width/2-offset,    height/2,      0,
 		-width/2,           0,             0,
 		 width/2-offset,   -height/2,      0,
-		 width/2,          -height/2,      0]
+		 width/2,          -height/2,      0]]
 
-dx = [   width/2-offset,    0,             0,
+dx = [[   width/2-offset,    0,             0,
 		-width/2,           height/2,      0,
 		-width/2+offset,    height/2,      0,
 		 width/2,           0,             0,
 		-width/2+offset,   -height/2,      0,
-		-width/2,          -height/2,      0]
+		-width/2,          -height/2,      0]]
 
 
-up = [  0*rapp2,   			 -(-width/2+offset)*rapp1,        0,
+up = [[  0*rapp2,   		 -(-width/2+offset)*rapp1,        0,
 		(+height/2)*rapp2,   -(width/2)*rapp1,                0,
 		(+height/2)*rapp2,   -(width/2-offset)*rapp1,         0,
 				  0*rapp2,   -(-width/2)*rapp1,               0,
 		(-height/2)*rapp2,   -(width/2-offset)*rapp1,         0,
-		(-height/2)*rapp2,   -(width/2)*rapp1,                0]
+		(-height/2)*rapp2,   -(width/2)*rapp1,                0]]
 
-down = [0*rapp2,   			 +(-width/2+offset)*rapp1,        0,
+down = [[0*rapp2,   		 +(-width/2+offset)*rapp1,        0,
 		(+height/2)*rapp2,   +(width/2)*rapp1,                0,
 		(+height/2)*rapp2,   +(width/2-offset)*rapp1,         0,
 				  0*rapp2,   +(-width/2)*rapp1,               0,
 		(-height/2)*rapp2,   +(width/2-offset)*rapp1,         0,
-		(-height/2)*rapp2,   +(width/2)*rapp1,                0]
+		(-height/2)*rapp2,   +(width/2)*rapp1,                0]]
 
 
 ####COLORS
@@ -67,17 +67,51 @@ red = [139,0,0, 240,128,128, 139,0,0, 139,0,0, 139,0,0, 139,0,0]
 white = [255,255,240, 255,255,240, 248,248,255, 255,255,240, 255,255,240, 255,255,240]
 green = [34,139,34, 50,205,50, 34,139,34, 34,139,34, 34,139,34, 34,139,34]
 
-
-arrows = {'up': up, 
-		  'down': down,
-		  'sx': sx,
-		  'dx': dx }
-
 colors = {'blue': blue,
 		  'red': red,
 		  'white': white,
 		  'green': green  }
+
+
+def scale_figure(my_figure, scaling):
+	new_fig = []
+	for item in my_figure:
+		half_fig = []
+		for coord in item:
+			half_fig.append(coord*scaling)
+		new_fig.append(half_fig)
+	return new_fig
+
+
+def draw_go_back():
+	mini_offset = .05
+
+	right_back = [(+width/2),			 (+height/2),			   0,
+				  (+width/2)+mini_offset,(+height/2),			   0,
+				  (+width/2)+mini_offset,(-height/2)+mini_offset*2,0,
+				  (+width/2),			 (-height/2)+mini_offset*2,0]
+
+	left_back = [-(+width/2),			 (+height/2),			 0,
+			     -(+width/2)+mini_offset,(+height/2),			 0,
+			     -(+width/2)+mini_offset,(-height/2)+mini_offset,0,
+			     -(+width/2),			 (-height/2)+mini_offset,0]
+	
+	up_back = [(-width/2),(+height/2), 0,
+			   (+width/2),(+height/2), 0,
+			   (+width/2),(+height/2)-mini_offset, 0,
+			   (-width/2),(+height/2)-mini_offset, 0,]
+
+	down_back = down[:]
+	down_back = scale_figure(down_back, 0.65)
+	down_back = move_arrow(down_back, -0.22, False)
+	down_back = move_arrow(down_back, -0.1185, True)
+	
+
+	return [up_back] + [left_back] + [right_back] + down_back
+
+
 ###### END ARROWS #####
+
 
 ### FUNCTIONS ###
 def update_coordinates(my_indications):
@@ -121,12 +155,17 @@ def move_arrow(my_arrow, offset, horiz):
 	else:
 		flag = 1
 
-	for coord in range(0,len(my_arrow)):
-		my_pos = float(my_arrow[coord])
-		if coord % 3 == flag:
-			my_pos = float(my_pos) + float(offset)
-			my_pos = float("{0:.2f}".format(my_pos))
-		new_pos.append(float(my_pos))
+	i = 0
+	for piece in my_arrow:
+		single_pos = []
+		for coord in piece:
+			my_pos = float(coord)
+			if i % 3 == flag:
+				my_pos = float(my_pos) + float(offset)
+				my_pos = float("{0:.2f}".format(my_pos))
+			single_pos.append(float(my_pos))
+			i += 1
+		new_pos.append(single_pos)
 
 	return new_pos
 
@@ -154,9 +193,9 @@ def draw_fig(my_indications):
 	figures = []
 
 	for key, value in my_indications.iteritems():
-		fig = pyglet.graphics.vertex_list(6, ('v3f', value[2]), ('c3B', colors[value[1]]))
-
-		figures.append(fig)
+		for v in value[2]:
+			fig = pyglet.graphics.vertex_list(len(v)/3, ('v3f', v), ('c3B', colors[value[1]][:len(v)]))
+			figures.append(fig)
 
 	return figures
 	
@@ -193,6 +232,13 @@ def animate_arrow(my_indications, moving):
 				my_offset = -.6
 			horiz = True
 
+		if 'back' in value[0]:
+			if moving%2 == 0:
+				my_offset = -20
+			else: 
+				my_offset = +20
+			horiz = True
+
 		value[2] = move_arrow(value[2], my_offset, horiz)
 
 	return my_indications
@@ -204,6 +250,12 @@ def update_moving(my_mov):
 	return my_mov
 ### END FUNCTIONS ###
 	
+arrows = {'sx': sx,
+		  'dx': dx,
+		  'up': up,
+		  'down': down,
+		  'back': draw_go_back()
+		  }
 
 class MyWindow(pyglet.window.Window):
 		def __init__(self, *args, **kwargs):
@@ -247,7 +299,7 @@ class ProjectorThread(threading.Thread):
 		
 
 	def run(self):
-		window = MyWindow(window_width, window_height, "test directions", resizable=False, visible=True, fullscreen=True)
+		window = MyWindow(window_width, window_height, "test directions", resizable=False, visible=True, fullscreen=False)
 		pyglet.app.run()
 
 
