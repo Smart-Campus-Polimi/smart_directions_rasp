@@ -50,7 +50,7 @@
 	 	<location>0rd floor</location>
 	 	<directions>
 	 		<rasp id="A" final="False">sx</rasp>
-	 		<rasp id="B" final="False">down</rasp>
+	 		<rasp id="B" final="False">dx</rasp>
 	 		<rasp id="C" final="False">down</rasp>
 	 		<rasp id="D" final="True">down</rasp>
 	 	</directions>
