@@ -45,14 +45,15 @@ sniffer_queue = Queue.Queue(BUF_SIZE)
 #global colors
 #colors = ['green', 'blue', 'red', 'white']
 
+#path to a folder
 def make_sure_path_exists(path):
 	if not os.path.exists(path):
 		os.makedirs(path)
 
-starting_time = strftime("%H%M%S", localtime())
+starting_time = strftime("%H%M%S", localtime()) #hour, minute, second
 starting_day = strftime("%d%m%y", localtime())
 
-pwd = subprocess.check_output(['pwd']).rstrip() + "/"
+pwd = subprocess.check_output(['pwd']).rstrip() + "/" #check the actual path
 if "smart_directions_rasp" not in pwd:
 	pwd = pwd + "smart_directions_rasp/"
 
@@ -62,21 +63,21 @@ session_csv_path = pwd+"data/"+starting_day+"/session_"+starting_time+".csv"
 make_sure_path_exists(ping_csv_path)
 #make_sure_path_exists(session_csv_path)
 
-rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1]
+rasp_id = subprocess.check_output(['cat', pwd+'config/raspi-number.txt'])[:1] #save rasp_id from raspi-number file (A, B, C...)
 logging.basicConfig(filename= pwd+'rasp'+rasp_id+'.log',level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logging.debug("Start smart directions on rasp "+rasp_id)
 logging.debug("directory: "+ pwd)
 
-broker_address = "10.79.1.176" 
-broker_address_xub = "10.0.2.15" 
+broker_address = "10.79.1.176" #server address 
+broker_address_xub = "10.0.2.15" #localhost
 topic_name = "topic/rasp4/directions"
 
-StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
+StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp']) 
 
 
 
-
+#when hit ctrl c happen this...
 def signal_handler(signal, frame):
 	logging.info("Signal Handler arrived")
 	print "Exit!"
@@ -164,6 +165,7 @@ def open_map(map_path):
 	return root
 
 
+#check if a mac_address is in the list of the active mac addresses
 def is_in_list(mac_addr):
 	for t in t_sniffer:
 		if mac_addr in t:
@@ -171,6 +173,7 @@ def is_in_list(mac_addr):
 	return False
 
 
+#when an user arrives to the last raspberry or the timer expires
 def stop_single_process(item):
 	mac_target, timestamp = item
 	
@@ -232,6 +235,7 @@ def assign_color():
 	else:
 		return "Purple"
 '''
+#return the color of a mac
 def user_color(my_mac):
 	for usr in t_sniffer:
 		if my_mac in usr:
@@ -284,12 +288,7 @@ if __name__ == "__main__":
 	logging.info("the broker_address is "+broker_address)
 
 	#GLOBAL VARS
-	'''
-	global users_colors
-	users_colors = {}
-	global color_used
-	color_used = []
-	'''
+
 	global projector_up
 	projector_up = {}
 
@@ -357,7 +356,6 @@ if __name__ == "__main__":
 				if is_in_list(mac_target):
 					
 					if new_proj_status:
-
 						logging.info("New image")
 						if mac_target not in projector_up:
 							projector_up[mac_target] = [direction, user_color(mac_target)]
