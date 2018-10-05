@@ -51,7 +51,7 @@ def signal_handler(signal, frame):
 		user[0].stop()
 	
 	t_mqtt.stop()
-	t_proj.stop()
+	#t_proj.stop()
 
 	
 	try:
@@ -104,7 +104,7 @@ def stop_single_process(item):
 			del projector_up[mac_target]
 			projector_queue.put(projector_up)
 		'''
-		
+
 	#delete the timer
 	for t in timer_sniffer:
 		if mac_target in t:
