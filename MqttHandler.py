@@ -18,12 +18,10 @@ class Receiver:
 		self.queue_sub = queue_sub
 
 
-	#check this method 
 	def _subscribe_to_topic(self, my_topics, client):
 			for topic in my_topics:
 				client.subscribe(topic, qos=1)
 				c.logging.debug("Subscribing to %s", topic)
-	#and this one
 	def _receive_startMsg(self, msg):
 		c.logging.info("starting msg is received")
 		msg = "[" + msg + "]"
@@ -58,7 +56,7 @@ class Receiver:
 	def on_connect(self, client, userdata, flags, rc):
 			c.logging.debug("MQTT: connected with result code "+str(rc))
 			
-			_subscribe_to_topic(c.TOPIC_LIST, client)
+			self._subscribe_to_topic(c.TOPIC_LIST, client)
 
 	def on_message(self, client, userdata, msg):
 			c.logging.info("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
@@ -66,10 +64,10 @@ class Receiver:
 			print "receive a msg in MQTT"
 			
 			if msg.topic == c.TOPIC_LIST[0]:
-				_receive_startMsg(self, msg_mqtt_raw)
+				self._receive_startMsg(msg_mqtt_raw)
 			
 			elif msg.topic == c.TOPIC_LIST[1]:
-				_receive_stopMsg(self, msg_mqtt_raw)
+				self._receive_stopMsg(msg_mqtt_raw)
 
 	def on_disconnect(self, client, userdata, rc):
 		if rc != 0:

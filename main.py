@@ -196,8 +196,7 @@ if __name__ == "__main__":
 	while True: 
 		if not mqtt_sub_q.empty():
 			item = mqtt_sub_q.get()
-			c.logging.info("A new message is arrived. %s", item)
-			print "new message is arrived"
+			c.logging.info("A new message is arrived to the main. %s", item)
 
 			if type(item).__name__ == "StartMsg":
 				c.logging.info("The type is START MSG")

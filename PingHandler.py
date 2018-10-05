@@ -7,7 +7,7 @@ import thread_test
 import csv
 from datetime import datetime
 from collections import namedtuple
-
+import constants as c
 
 AVG_RATE = 20
 
@@ -152,7 +152,7 @@ class PingThread(threading.Thread):
 		c.logging.info("starting bluetooth handler")
 		print "starting ping ... ", self.mac_target
 
-		self.bt = bluetoothHandler.bluetoothHandler()
+		self.bt = BluetoothHandler.BluetoothHandler()
 		self.bt.start(self.mac_target)
 
 		self.is_running, self.sum_rssi, self.count, self.rssi_avg, self.engaged, self.print_dir = initialize_values()
