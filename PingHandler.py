@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
-import logging
 import threading
-import bluetoothHandler
-import subprocess
+import BluetoothHandler
 import xml_parser
 import thread_test
 import csv
@@ -12,7 +10,6 @@ from collections import namedtuple
 
 
 AVG_RATE = 20
-pwd = subprocess.check_output(['pwd']).rstrip() + "/"
 
 ProjMsg = namedtuple('ProjMsg', ['mac_address', 'direction', 'proj_status', 'final_pos', 'timestamp'])
 
@@ -31,23 +28,23 @@ def average_rssi(rssi, count, sum_rssi):
 def check_proximity(rssi):
 	if rssi > 0.5:
 		position = "very very near"
-		logging.info(position)
+		c.logging.info(position)
 		return 0
 	elif rssi > -1.0 and rssi <=0.5:
 		position = "very near"
-		logging.info(position)
+		c.logging.info(position)
 		return 1
 	elif rssi > -10 and rssi <=-1.0:
 		position = "near"
-		logging.info(position)
+		c.logging.info(position)
 		return 2
 	elif rssi > -20 and rssi <=-10:
 		position = "visible"
-		logging.info(position)
+		c.logging.info(position)
 		return 3
 	elif rssi <= -20:
 		position = "in range"
-		logging.info(position)
+		c.logging.info(position)
 		return 4
 	else:
 		return 9
@@ -57,21 +54,21 @@ def initialize_values():
 
 def user_out_of_range(self):
 		print self.mac_target, " -> Out of Range"
-		logging.info("Out of range")
+		c.logging.info("Out of range")
 		if self.print_dir:
-			logging.debug("print dir? %s", self.print_dir)
+			c.logging.debug("print dir? %s", self.print_dir)
 			self.oor_count += 1
 			if self.oor_count > 1:
 				self.engaged = False
-				logging.debug("Out of range count: %s", self.oor_count)
+				c.logging.debug("Out of range count: %s", self.oor_count)
 				turn_off_projector(self)
 				
 def turn_off_projector(self):
 	self.print_dir = False
 	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp=datetime.now())
 	
-	logging.debug("Projector msg: %s", p_msg)
-	logging.info("Putting in queue the proj_msg")
+	c.logging.debug("Projector msg: %s", p_msg)
+	c.logging.info("Putting in queue the proj_msg")
 
 	self.queue.put(p_msg)
 	
@@ -80,17 +77,17 @@ def turn_on_projector(self, direct):
 	self.print_dir = True
 	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp=datetime.now())
 	
-	logging.debug("Direction: ARROW %s", direct)
-	logging.debug("Projector msg: %s", p_msg)
-	logging.info("Putting in queue the proj_msg")
+	c.logging.debug("Direction: ARROW %s", direct)
+	c.logging.debug("Projector msg: %s", p_msg)
+	c.logging.info("Putting in queue the proj_msg")
 	self.queue.put(p_msg)
 	
 
 
 def user_in_range(self):
 	self.position = check_proximity(self.rssi_avg)
-	logging.debug("average rssi: %s", self.rssi_avg)
-	logging.debug("position is %s", self.position)
+	c.logging.debug("average rssi: %s", self.rssi_avg)
+	c.logging.debug("position is %s", self.position)
 	print self.mac_target, "-> position:", self.position, "---", self.rssi_avg
 
 	if self.position < 4:
@@ -100,7 +97,7 @@ def user_in_range(self):
 		if self.position < 2:
 			if not self.engaged:
 				self.engaged = True
-				logging.info("The user is engaged by rasp")
+				c.logging.info("The user is engaged by rasp")
 				#if self.final:
 				#when an user is engaged by the sniffer, every sniffer sends a msg. then if the sniffer itself is the final one the main handle this
 				user_arrived(self)
@@ -109,7 +106,7 @@ def user_in_range(self):
 	elif self.position > 3:
 		if self.print_dir:
 			turn_off_projector(self)
-			logging.debug("Projector is off because position is %s and avg_rssi is %s", self.position, self.rssi_avg)
+			c.logging.debug("Projector is off because position is %s and avg_rssi is %s", self.position, self.rssi_avg)
 
 
 
@@ -117,8 +114,8 @@ def user_arrived(self):
 	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=self.final, timestamp=datetime.now())
 	self.queue.put(p_msg)
 
-	logging.info("Putting in queue the proj_msg with final purpose")
-	logging.debug("Projector msg: %s", p_msg)
+	c.logging.info("Putting in queue the proj_msg with final purpose")
+	c.logging.debug("Projector msg: %s", p_msg)
 
 def create_csv(file, mac_addr, rssi, ping, ts):
 	file.write("\n"+str(mac_addr)+","+str(rssi)+","+str(ping)+","+str(ts))	
@@ -127,7 +124,6 @@ def create_csv(file, mac_addr, rssi, ping, ts):
 class PingThread(threading.Thread):
 	def __init__(self, user, root, queue, stop_queue):
 		threading.Thread.__init__(self)
-		print self
 		self.user = user
 		self.root = root
 		self.queue = queue
@@ -148,33 +144,33 @@ class PingThread(threading.Thread):
 
 		self.mac_target, self.place_id_target, __, self.timestamp_target, __ = self.user
 		
-		logging.debug("Thread %s is running", self)
-		logging.debug("Thread input params. mac: %s, place_id: %s, ts: %s", self.mac_target, self.place_id_target, self.timestamp_target)
+		c.logging.debug("Thread %s is running", self)
+		c.logging.debug("Thread input params. mac: %s, place_id: %s, ts: %s", self.mac_target, self.place_id_target, self.timestamp_target)
 
 		self.direction, self.final = xml_parser.find_direction(self.root, self.place_id_target, thread_test.rasp_id)
-		logging.debug("parsing file. direcition: %s, is_final: %s", self.direction, self.final)
-		logging.info("starting bluetooth handler")
+		c.logging.debug("parsing file. direcition: %s, is_final: %s", self.direction, self.final)
+		c.logging.info("starting bluetooth handler")
 		print "starting ping ... ", self.mac_target
 
 		self.bt = bluetoothHandler.bluetoothHandler()
 		self.bt.start(self.mac_target)
 
 		self.is_running, self.sum_rssi, self.count, self.rssi_avg, self.engaged, self.print_dir = initialize_values()
-		logging.debug("setting up params. is_running %s, engaged %s", self.is_running, self.engaged)
+		c.logging.debug("setting up params. is_running %s, engaged %s", self.is_running, self.engaged)
 
 
-		logging.info("staring while loop")
+		c.logging.info("staring while loop")
 		while self.is_running:
 			#TODO method
 			#print "inside ping: ", self.stop_queue
 			if not self.stop_queue.empty():
 				self.msg = self.stop_queue.get()
 				print "stop msg", self.msg
-				logging.info("A new message is received")
-				logging.debug("Msg info %s", self.msg)
+				c.logging.info("A new message is received")
+				c.logging.debug("Msg info %s", self.msg)
 				
 				if type(self.msg).__name__ == "StopMsg":
-					logging.info("The message is a StopMsg")
+					c.logging.info("The message is a StopMsg")
 					self.stop_mac_addr, __ = self.msg
 					if self.stop_mac_addr == self.mac_target:
 						self.stop()
@@ -184,7 +180,7 @@ class PingThread(threading.Thread):
 
 			if self.rssi is not None:
 				if self.rssi == "OOR":
-					logging.debug("out of range rssi: %s", self.rssi)
+					c.logging.debug("out of range rssi: %s", self.rssi)
 					user_out_of_range(self)
 				else:
 					try:
@@ -193,7 +189,7 @@ class PingThread(threading.Thread):
 						self.oor_count = 0
 						create_csv(self.f, self.mac_target, self.rssi, self.ping, datetime.now())
 					except ValueError as e:
-						logging.error("Rssi concersion error %s", e)
+						c.logging.error("Rssi concersion error %s", e)
 						print "Conversion error!"
 						continue
 
@@ -202,7 +198,7 @@ class PingThread(threading.Thread):
 				
 
 	def stop(self):
-		logging.info("Closing the thread")
+		c.logging.info("Closing the thread")
 		self.is_running = False
 		self.bt.stop_proc()
 		self.f.close()

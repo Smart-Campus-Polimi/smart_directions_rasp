@@ -1,16 +1,14 @@
 #!/usr/bin/python
 
-import logging
 import threading
 import json
 import Queue
 import paho.mqtt.client as mqtt
 from collections import namedtuple
 
-import thread_test
+import constants as c
 
-#BUF_SIZE = 10
-#q = Queue.Queue(BUF_SIZE)	
+
 
 StartMsg = namedtuple('StartMsg', ['mac_address', 'place_id', 'id', 'timestamp', 'color'])
 StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
@@ -18,58 +16,67 @@ StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
 class Receiver:
 	def __init__(self, queue_sub):
 		self.queue_sub = queue_sub
+
+
+	#check this method 
+	def _subscribe_to_topic(self, my_topics, client):
+			for topic in my_topics:
+				client.subscribe(topic, qos=1)
+				c.logging.debug("Subscribing to %s", topic)
+	#and this one
+	def _receive_startMsg(self, msg):
+		c.logging.info("starting msg is received")
+		msg = "[" + msg + "]"
+	
+		try:
+			msg_mqtt = json.loads(msg)
+			c.logging.debug("json converted. Content: %s", msg_mqtt)
+		except ValueError, e:
+			c.logging.error("Malformed json %s. Json: %s", e, msg)
+			msg_mqtt = msg[:-1]
+			msg_mqtt = msg_mqtt[1:]
+
+		start_msg = StartMsg(id=msg_mqtt[0]['id'],
+				 			 mac_address=msg_mqtt[0]['mac_address'],
+				 			 place_id=msg_mqtt[0]['place_id'],
+				 			 timestamp=msg_mqtt[0]['timestamp'], 
+							 color=msg_mqtt[0]['color'])
+
+		#add message to queue
+		if not self.queue_sub.full():
+			self.queue_sub.put(start_msg)
+			c.logging.debug("putting msg %s in queue", start_msg)
+		else:
+			c.logging.warning("Queue is full %s", q)
+
+	def _receive_stopMsg(self, msg):
+		c.logging.info("Stopping msg is received")
+		stop_msg = StopMsg(mac_address=msg, timestamp="10:21:21") #update the timestamp
+		c.logging.info("Putting the msg in the sub queue")
+		self.queue_sub.put(stop_msg)
+
 	def on_connect(self, client, userdata, flags, rc):
-			logging.debug("MQTT: connected with result code "+str(rc))
+			c.logging.debug("MQTT: connected with result code "+str(rc))
 			
-			#TODO subscribing topic list
-			client.subscribe(thread_test.topic_name, qos=1)
-			client.subscribe("stop_ping", qos=1)
-			logging.debug("Subscribing to %s", thread_test.topic_name)
+			_subscribe_to_topic(c.TOPIC_LIST, client)
 
 	def on_message(self, client, userdata, msg):
-			logging.info("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
+			c.logging.info("Receiving a msg with payload %s", str(msg.payload.decode("utf-8")))
 			msg_mqtt_raw = str(msg.payload.decode("utf-8"))
 			print "receive a msg in MQTT"
 			
-
-			if msg.topic == thread_test.topic_name:
-				logging.info("starting msg is received")
-				msg_mqtt_raw = "[" + msg_mqtt_raw + "]"
+			if msg.topic == c.TOPIC_LIST[0]:
+				_receive_startMsg(self, msg_mqtt_raw)
 			
-				try:
-					msg_mqtt = json.loads(msg_mqtt_raw)
-					logging.debug("json converted. Content: %s", msg_mqtt)
-				except ValueError, e:
-					logging.error("Malformed json %s. Json: %s", e, msg_mqtt_raw)
-					msg_mqtt = msg_mqtt_raw[:-1]
-					msg_mqtt = msg_mqtt[1:]
-
-				start_msg = StartMsg(id=msg_mqtt[0]['id'],
-						 mac_address=msg_mqtt[0]['mac_address'],
-						 place_id=msg_mqtt[0]['place_id'],
-						 timestamp=msg_mqtt[0]['timestamp'], 
-						 color=msg_mqtt[0]['color'])
-
-				#add message to queue
-				if not self.queue_sub.full():
-					self.queue_sub.put(start_msg)
-					logging.debug("putting msg %s in queue", start_msg)
-				else:
-					logging.warning("Queue is full %s", q)
-			
-			elif msg.topic == "stop_ping":
-				logging.info("Stopping msg is received")
-				stop_msg = StopMsg(mac_address=msg_mqtt_raw, timestamp="10:21:21")
-				logging.info("Putting the msg in the sub queue")
-				self.queue_sub.put(stop_msg)
-
+			elif msg.topic == c.TOPIC_LIST[1]:
+				_receive_stopMsg(self, msg_mqtt_raw)
 
 	def on_disconnect(self, client, userdata, rc):
 		if rc != 0:
-			logging.error("Unexpected disconnection %d", rc)
+			c.logging.error("Unexpected disconnection %d", rc)
 			print("Unexpected disconnection.")
 		else:
-			logging.debug("disconnection ok")
+			c.logging.debug("disconnection ok")
 
 class MqttThread(threading.Thread):
 	def __init__(self, queue_sub, queue_pub, host):
@@ -81,27 +88,27 @@ class MqttThread(threading.Thread):
 
 	def run(self):
 		print "Creating client ---> Host: ", self.host
-		logging.info("Mqtt thread runs")
+		c.logging.info("Mqtt thread runs")
 		receiver = Receiver(self.queue_sub)
 		self.client.loop_start()
-		logging.info("Mqtt starts loop")
+		c.logging.info("Mqtt starts loop")
 		self.client.on_connect = receiver.on_connect
 		self.client.on_message = receiver.on_message
 
 		self.client.connect_async(self.host, 1883)
-		logging.info("Opening mqtt connection")
+		c.logging.info("Opening mqtt connection")
 
 		while True:
 			if not self.queue_pub.empty():
+				#the while task is to wait that an user is arrived to the final sniffer and to publish a msg
 				final_pos_msg = self.queue_pub.get()
-				logging.info("%s is arrived to the final destination", final_pos_msg)
-				print final_pos_msg, " is arrived to the final destination"
+				c.logging.info("%s is arrived to the final destination", final_pos_msg)
 				
-				self.client.publish("stop_ping", final_pos_msg, qos=1)
-				logging.info("Sending the final message")
+				self.client.publish(c.TOPIC_LIST[1], final_pos_msg, qos=1)
+				c.logging.info("Sending the final message")
 
 	
 	def stop(self):
-		logging.info("disconnect mqtt")
+		c.logging.info("disconnect mqtt")
 		self.client.disconnect()
 		

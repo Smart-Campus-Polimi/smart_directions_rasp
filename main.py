@@ -48,15 +48,10 @@ def signal_handler(signal, frame):
 	c.logging.debug("the thread are: %s", t_sniffer)
 	
 	for user in t_sniffer:
-		c.logging.debug("close thread %s", user[0])
 		user[0].stop()
-	c.logging.info("Stop all ping thread")
 	
 	t_mqtt.stop()
-	c.logging.info("Stop mqtt thread")
-
 	t_proj.stop()
-	c.logging.info("Stop projector thread")
 
 	
 	try:
@@ -67,7 +62,6 @@ def signal_handler(signal, frame):
 		c.logging.warning("No l2ping process")
 
 
-	c.logging.info("Closing the timer")
 	#close timer
 	for t in timer_sniffer:
 		t[0].cancel()
@@ -92,30 +86,24 @@ def stop_single_process(item):
 	if is_in_list(mac_target):
 		print "stop the process ", mac_target
 		c.logging.info("Stop the process %s", mac_target)
+
 		stop_q = [q for q in stop_list if mac_target in q]
-		
+		stop_q = stop_q[0][0]
+		stop_q.put(item)
+
 		#remove old user
 		for usr in stop_list:
 			if mac_target in usr:
 				c.logging.info("Remove user %s", usr)
 				stop_list.remove(usr)
-		
-		stop_q = stop_q[0][0]
-
-		stop_q.put(item)
 
 		if mac_target in projector_up:
 			#delete user from list and send to projector thread
 			c.logging.info("Delete projector usr %s", mac_target)
 			del projector_up[mac_target]
 			projector_queue.put(projector_up)
-		
-		#restore color in list
-		#color_dismissed = users_colors[mac_target]
-		#colors.append(color_dismissed)
-		#color_used.remove(color_dismissed)
-		#c.logging.info("Restore color %s", color_dismissed)
 
+	#delete the timer
 	for t in timer_sniffer:
 		if mac_target in t:
 			t[0].cancel()
@@ -137,16 +125,7 @@ def final_pos_timer(mac_addr, ts):
 	if is_in_list(mac_addr):
 		mqtt_pub_q.put(mac_addr)
 		c.logging.debug("put in mqtt queue for final msg")
-'''
-def assign_color():
-	if len(colors)>0:
-		color_chosed = colors[0]
-		colors.remove(color_chosed)
-		color_used.append(color_chosed)
-		return color_chosed
-	else:
-		return "Purple"
-'''
+
 #return the color of a mac
 def user_color(my_mac):
 	for usr in t_sniffer:
@@ -155,6 +134,7 @@ def user_color(my_mac):
 			
 	return None
 
+#create the thread and start the timer
 def create_user(my_item, my_mac):
 	stop_queue = Queue.Queue(c.BUF_SIZE)
 	stop_list.append([stop_queue, my_mac])
@@ -163,8 +143,6 @@ def create_user(my_item, my_mac):
 	col = my_item[4]
 
 	t_sniffer.append([user, my_mac, col])
-
-	
 
 	c.logging.debug("Creating a new thread")
 	user.start()
@@ -182,9 +160,9 @@ if __name__ == "__main__":
 
 	#initialize things
 	signal.signal(signal.SIGINT, signal_handler)
-	RASP_ID, PWD = env.create_path_and_files()
+	RASP_ID = env.create_path_and_files()
 	util.args_parser()
-	map_root = util.open_map(PWD+'map.xml')
+	map_root = util.open_map(c.MAP)
 
 	#the program is started
 	c.logging.info("_____________________________")
