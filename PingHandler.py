@@ -49,7 +49,7 @@ def check_proximity(rssi):
 	else:
 		return 9
 
-def initialize_values():
+def _initialize_values():
 	return True, 0, 0, 0, False, False
 
 def user_out_of_range(self):
@@ -140,8 +140,6 @@ class PingThread(threading.Thread):
 		self.f.write("\"mac_address\",\"rssi\",\"ping\",\"timestamp\"")
 
 	def run(self):
-		
-
 		self.mac_target, self.place_id_target, __, self.timestamp_target, __ = self.user
 		
 		c.logging.debug("Thread %s is running", self)
@@ -155,14 +153,13 @@ class PingThread(threading.Thread):
 		self.bt = BluetoothHandler.BluetoothHandler()
 		self.bt.start(self.mac_target)
 
-		self.is_running, self.sum_rssi, self.count, self.rssi_avg, self.engaged, self.print_dir = initialize_values()
+		self.is_running, self.sum_rssi, self.count, self.rssi_avg, self.engaged, self.print_dir = _initialize_values()
 		c.logging.debug("setting up params. is_running %s, engaged %s", self.is_running, self.engaged)
 
 
 		c.logging.info("staring while loop")
 		while self.is_running:
 			#TODO method
-			#print "inside ping: ", self.stop_queue
 			if not self.stop_queue.empty():
 				self.msg = self.stop_queue.get()
 				print "stop msg", self.msg

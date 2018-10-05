@@ -2,15 +2,15 @@
 
 import threading
 import signal
-#import time #not used
 import sys
-import json
+#import json
 import Queue
 import subprocess 
 import pprint as pp
 from collections import namedtuple
 from datetime import datetime
-from time import strftime, localtime #not used
+
+
 import MqttHandler
 import PingHandler
 import ProjectorHandler
@@ -97,12 +97,14 @@ def stop_single_process(item):
 				c.logging.info("Remove user %s", usr)
 				stop_list.remove(usr)
 
+		'''
 		if mac_target in projector_up:
 			#delete user from list and send to projector thread
 			c.logging.info("Delete projector usr %s", mac_target)
 			del projector_up[mac_target]
 			projector_queue.put(projector_up)
-
+		'''
+		
 	#delete the timer
 	for t in timer_sniffer:
 		if mac_target in t:
@@ -233,7 +235,7 @@ if __name__ == "__main__":
 				c.logging.debug("mac %s, dir: %s, new_proj_statu: %s, final: %s", mac_target, direction, new_proj_status, final_pos)
 
 				if is_in_list(mac_target):
-					
+					'''
 					if new_proj_status:
 						c.logging.info("New image")
 						if mac_target not in projector_up:
@@ -247,7 +249,7 @@ if __name__ == "__main__":
 						print "sendo", projector_up
 						projector_queue.put(projector_up)
 					
-
+					'''
 					if final_pos:
 						print "The user is arrived to the final step, sending msg to the other sniffers..."
 						c.logging.info("The user is in the final step")

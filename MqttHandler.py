@@ -34,6 +34,7 @@ class Receiver:
 			msg_mqtt = msg[:-1]
 			msg_mqtt = msg_mqtt[1:]
 
+		#TODO: check if the message is correct
 		start_msg = StartMsg(id=msg_mqtt[0]['id'],
 				 			 mac_address=msg_mqtt[0]['mac_address'],
 				 			 place_id=msg_mqtt[0]['place_id'],
