@@ -7,7 +7,7 @@ import subprocess
 import sys
 import os
 import errno
-import thread_test
+import my_main
 import copy
 
 global projector_queue

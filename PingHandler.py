@@ -3,7 +3,7 @@
 import threading
 import BluetoothHandler
 import xml_parser
-import thread_test
+import my_main
 import csv
 from datetime import datetime
 from collections import namedtuple
@@ -63,7 +63,7 @@ def user_out_of_range(self):
 				c.logging.debug("Out of range count: %s", self.oor_count)
 				turn_off_projector(self)
 				
-def turn_off_projector(self):
+def is_near(self):
 	self.print_dir = False
 	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp=datetime.now())
 	
@@ -73,7 +73,7 @@ def turn_off_projector(self):
 	self.queue.put(p_msg)
 	
 
-def turn_on_projector(self, direct):
+def is_out_of_range(self, direct):
 	self.print_dir = True
 	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=False, timestamp=datetime.now())
 	
@@ -92,9 +92,10 @@ def user_in_range(self):
 
 	if self.position < 4:
 		if not self.print_dir:
-			turn_on_projector(self, self.direction)
+			is_near(self)
 						
 		if self.position < 2:
+
 			if not self.engaged:
 				self.engaged = True
 				c.logging.info("The user is engaged by rasp")
@@ -105,7 +106,7 @@ def user_in_range(self):
 		
 	elif self.position > 3:
 		if self.print_dir:
-			turn_off_projector(self)
+			is_out_of_range(self)
 			c.logging.debug("Projector is off because position is %s and avg_rssi is %s", self.position, self.rssi_avg)
 
 
@@ -113,7 +114,6 @@ def user_in_range(self):
 def user_arrived(self):
 	p_msg = ProjMsg(mac_address=self.mac_target, direction=self.direction, proj_status=self.print_dir, final_pos=self.final, timestamp=datetime.now())
 	self.queue.put(p_msg)
-
 	c.logging.info("Putting in queue the proj_msg with final purpose")
 	c.logging.debug("Projector msg: %s", p_msg)
 
@@ -128,7 +128,7 @@ class PingThread(threading.Thread):
 		self.root = root
 		self.queue = queue
 		self.stop_queue = stop_queue
-		filename_csv = thread_test.ping_csv_path
+		#filename_csv = main.ping_csv_path
 		self.thread_number = str(self)[19:21]
 
 		try:
@@ -136,16 +136,16 @@ class PingThread(threading.Thread):
 		except ValueError:
 			self.thread_number=self.thread_number[0]
 			
-		self.f = open(filename_csv +"/thread_"+ self.thread_number +".csv", 'w')
-		self.f.write("\"mac_address\",\"rssi\",\"ping\",\"timestamp\"")
+		#self.f = open(filename_csv +"/thread_"+ self.thread_number +".csv", 'w')
+		#self.f.write("\"mac_address\",\"rssi\",\"ping\",\"timestamp\"")
 
 	def run(self):
-		self.mac_target, self.place_id_target, __, self.timestamp_target, __ = self.user
+		self.mac_target, self.place_id_target, __, self.timestamp_target, __, __ = self.user
 		
 		c.logging.debug("Thread %s is running", self)
 		c.logging.debug("Thread input params. mac: %s, place_id: %s, ts: %s", self.mac_target, self.place_id_target, self.timestamp_target)
 
-		self.direction, self.final = xml_parser.find_direction(self.root, self.place_id_target, thread_test.rasp_id)
+		self.direction, self.final = xml_parser.find_direction(self.root, self.place_id_target, c.RASP_ID)
 		c.logging.debug("parsing file. direcition: %s, is_final: %s", self.direction, self.final)
 		c.logging.info("starting bluetooth handler")
 		print "starting ping ... ", self.mac_target
@@ -182,13 +182,14 @@ class PingThread(threading.Thread):
 				else:
 					try:
 						self.rssi = float(self.rssi)
-						self.rssi_avg, self.count, self.sum_rssi = average_rssi(self.rssi, self.count, self.sum_rssi)
-						self.oor_count = 0
-						create_csv(self.f, self.mac_target, self.rssi, self.ping, datetime.now())
 					except ValueError as e:
 						c.logging.error("Rssi concersion error %s", e)
 						print "Conversion error!"
 						continue
+
+					self.rssi_avg, self.count, self.sum_rssi = average_rssi(self.rssi, self.count, self.sum_rssi)
+					self.oor_count = 0
+					#create_csv(self.f, self.mac_target, self.rssi, self.ping, datetime.now())
 
 					if self.rssi_avg is not None:
 						user_in_range(self)
@@ -198,6 +199,6 @@ class PingThread(threading.Thread):
 		c.logging.info("Closing the thread")
 		self.is_running = False
 		self.bt.stop_proc()
-		self.f.close()
+		#self.f.close()
 
 	

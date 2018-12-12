@@ -36,7 +36,7 @@ def create_path_and_files():
 	#save rasp_id from raspi-number file (A, B, C...)
 	rasp_id = subprocess.check_output(['cat', c.PWD+'config/raspi-number.txt'])[:1] 
 	global LOG_FILE
-	LOG_FILE = c.PWD+'rasp'+rasp_id+'.log'
+	LOG_FILE = c.PWD+'rasp'+c.RASP_ID+'.log'
 
 
 	c.logging.debug("Start smart directions on rasp "+rasp_id)

@@ -1,7 +1,6 @@
 import xml.etree.ElementTree as ET
 
 def find_name(root, pl_id):
-	print "place id", pl_id
 	for parent in root:
 		if (parent.attrib['placeid'] == pl_id):
 			for office in parent.findall('name'):
@@ -11,7 +10,6 @@ def find_name(root, pl_id):
 
 def find_direction(root, pl_id, rasp_id):
 	for place in root.findall('place'):
-		print "place", place
 		if(int(place.attrib['placeid']) == pl_id):
 			for direction in place.findall('directions'):
 				for rasp in direction.findall('rasp'):

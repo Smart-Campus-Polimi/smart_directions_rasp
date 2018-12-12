@@ -8,15 +8,12 @@ from collections import namedtuple
 
 import constants as c
 
-
-
-StartMsg = namedtuple('StartMsg', ['mac_address', 'place_id', 'id', 'timestamp', 'color'])
+StartMsg = namedtuple('StartMsg', ['mac_address', 'place_id', 'id', 'timestamp', 'color', 'is_beacon'])
 StopMsg = namedtuple('StopMsg', ['mac_address', 'timestamp'])
 
 class Receiver:
 	def __init__(self, queue_sub):
 		self.queue_sub = queue_sub
-
 
 	def _subscribe_to_topic(self, my_topics, client):
 			for topic in my_topics:
@@ -39,7 +36,8 @@ class Receiver:
 				 			 mac_address=msg_mqtt[0]['mac_address'],
 				 			 place_id=msg_mqtt[0]['place_id'],
 				 			 timestamp=msg_mqtt[0]['timestamp'], 
-							 color=msg_mqtt[0]['color'])
+							 color=msg_mqtt[0]['color'],
+							 is_beacon=msg_mqtt[0]['beacon_flag'])
 
 		#add message to queue
 		if not self.queue_sub.full():
@@ -50,7 +48,7 @@ class Receiver:
 
 	def _receive_stopMsg(self, msg):
 		c.logging.info("Stopping msg is received")
-		stop_msg = StopMsg(mac_address=msg, timestamp="10:21:21") #update the timestamp
+		stop_msg = StopMsg(mac_address=msg, timestamp="10:21:21") #TODO: update the timestamp
 		c.logging.info("Putting the msg in the sub queue")
 		self.queue_sub.put(stop_msg)
 
@@ -101,9 +99,9 @@ class MqttThread(threading.Thread):
 			if not self.queue_pub.empty():
 				#the while task is to wait that an user is arrived to the final sniffer and to publish a msg
 				final_pos_msg = self.queue_pub.get()
-				c.logging.info("%s is arrived to the final destination", final_pos_msg)
-				
 				self.client.publish(c.TOPIC_LIST[1], final_pos_msg, qos=1)
+
+				c.logging.info("%s is arrived to the final destination", final_pos_msg)
 				c.logging.info("Sending the final message")
 
 	
