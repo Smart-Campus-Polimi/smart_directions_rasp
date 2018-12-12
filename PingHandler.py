@@ -85,7 +85,7 @@ def is_out_of_range(self, direct):
 
 
 def user_in_range(self):
-	self.position = check_proximity(self.rssi_avg)
+	self.position = check_proximity(self.rssi_avg) #converte rssi in valori da 0 a 5 (0 vicinissimo, 5 lontano)
 	c.logging.debug("average rssi: %s", self.rssi_avg)
 	c.logging.debug("position is %s", self.position)
 	print self.mac_target, "-> position:", self.position, "---", self.rssi_avg
@@ -124,12 +124,12 @@ def create_csv(file, mac_addr, rssi, ping, ts):
 class PingThread(threading.Thread):
 	def __init__(self, user, root, queue, stop_queue):
 		threading.Thread.__init__(self)
-		self.user = user
-		self.root = root
-		self.queue = queue
-		self.stop_queue = stop_queue
+		self.user = user #mac address + posto + id + flag... ecc (json)
+		self.root = root #root xml
+		self.queue = queue #coda c'e/non c'e
+		self.stop_queue = stop_queue #per farlo stoppare
 		#filename_csv = main.ping_csv_path
-		self.thread_number = str(self)[19:21]
+		self.thread_number = str(self)[19:21] #id del thread
 
 		try:
 			int(self.thread_number[1])
@@ -145,19 +145,20 @@ class PingThread(threading.Thread):
 		c.logging.debug("Thread %s is running", self)
 		c.logging.debug("Thread input params. mac: %s, place_id: %s, ts: %s", self.mac_target, self.place_id_target, self.timestamp_target)
 
-		self.direction, self.final = xml_parser.find_direction(self.root, self.place_id_target, c.RASP_ID)
+		self.direction, self.final = xml_parser.find_direction(self.root, self.place_id_target, c.RASP_ID) #dove devo andare
 		c.logging.debug("parsing file. direcition: %s, is_final: %s", self.direction, self.final)
 		c.logging.info("starting bluetooth handler")
 		print "starting ping ... ", self.mac_target
 
-		self.bt = BluetoothHandler.BluetoothHandler()
-		self.bt.start(self.mac_target)
+		self.bt = BluetoothHandler.BluetoothHandler() #modulo per ping
+		self.bt.start(self.mac_target) #starta il ping 
 
 		self.is_running, self.sum_rssi, self.count, self.rssi_avg, self.engaged, self.print_dir = _initialize_values()
 		c.logging.debug("setting up params. is_running %s, engaged %s", self.is_running, self.engaged)
 
 
 		c.logging.info("staring while loop")
+		#per stoppare
 		while self.is_running:
 			#TODO method
 			if not self.stop_queue.empty():
@@ -166,14 +167,15 @@ class PingThread(threading.Thread):
 				c.logging.info("A new message is received")
 				c.logging.debug("Msg info %s", self.msg)
 				
-				if type(self.msg).__name__ == "StopMsg":
+				if type(self.msg).__name__ == "StopMsg": #stop queue ha self.msg
 					c.logging.info("The message is a StopMsg")
-					self.stop_mac_addr, __ = self.msg
+					self.stop_mac_addr, __ = self.msg #estrare da stop queue il mac da stoppare
 					if self.stop_mac_addr == self.mac_target:
-						self.stop()
+						self.stop() #stoppo il thread
 
 
-			self.rssi, self.ping = self.bt.rssi()
+			#per guardare rssi
+			self.rssi, self.ping = self.bt.rssi() #self.ping = rtt
 
 			if self.rssi is not None:
 				if self.rssi == "OOR":
@@ -187,7 +189,7 @@ class PingThread(threading.Thread):
 						print "Conversion error!"
 						continue
 
-					self.rssi_avg, self.count, self.sum_rssi = average_rssi(self.rssi, self.count, self.sum_rssi)
+					self.rssi_avg, self.count, self.sum_rssi = average_rssi(self.rssi, self.count, self.sum_rssi) #una volta su AVG RATE ritorna il valore, le altre volte NONE
 					self.oor_count = 0
 					#create_csv(self.f, self.mac_target, self.rssi, self.ping, datetime.now())
 
@@ -197,7 +199,7 @@ class PingThread(threading.Thread):
 
 	def stop(self):
 		c.logging.info("Closing the thread")
-		self.is_running = False
+		self.is_running = False #stoppa il thread
 		self.bt.stop_proc()
 		#self.f.close()
 
